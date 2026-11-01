@@ -1,0 +1,60 @@
+import * as THREE from "../vendor/three.js";
+import * as GL from "../core/shaders-lab.js";
+import { particles, quad, disposeGroup } from "../core/layers.js";
+import { v3 } from "../core/util.js";
+import { MODULE_ID } from "../constants.js";
+
+function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
+const QK = { low: 0.5, medium: 0.8, high: 1 };
+const PAL = {
+  stone: { a: [0.2, 0.19, 0.17], b: [0.58, 0.55, 0.5], dust: [0.5, 0.46, 0.4] },
+  wood:  { a: [0.2, 0.12, 0.06], b: [0.6, 0.42, 0.24], dust: [0.45, 0.36, 0.26] },
+  metal: { a: [0.18, 0.19, 0.21], b: [0.62, 0.64, 0.68], dust: [0.42, 0.42, 0.44] },
+  glass: { a: [0.35, 0.45, 0.5], b: [0.85, 0.95, 1.0], dust: [0.6, 0.66, 0.7] },
+};
+
+/**
+ * A wall breaking (chunks fly out, mostly away from the blast, and land as rubble in a cloud of dust)
+ * or being restored (the rubble rises and flies back into the wall, which closes with a seam of light).
+ * req = { a, b (feet), material, side (-1, 0, 1: which side of the wall the chunks fly to), rebuild }
+ */
+export class WallEffect {
+  constructor(overlay, req) {
+    this.o = overlay; this.req = req;
+    this.group = new THREE.Group(); overlay.scene.add(this.group);
+    this.under = new THREE.Group(); overlay.underScene().add(this.under);
+    this.clock = 0; this.hitstop = 0;
+    this.dur = req.rebuild ? 1.5 : 2.8;
+    const len = req.a.distanceTo(req.b);
+    const pal = PAL[req.material] ?? PAL.stone, q = QK[setting("quality", "high")] ?? 1;
+    const U = (mode) => ({ uA: { value: req.a.clone() }, uB: { value: req.b.clone() }, uT: { value: 0 }, uSide: { value: req.side ?? 0 }, uMode: { value: mode },
+      uRev: { value: req.rebuild ? 1 : 0 }, uSize: { value: req.material === "wood" ? 1.1 : 1.25 }, uFade: { value: 1 }, uNoise: { value: overlay.noise },
+      uWood: { value: req.material === "wood" ? 1 : 0 }, uPalA: { value: new THREE.Vector3(...pal.a) }, uPalB: { value: new THREE.Vector3(...pal.b) },
+      uDust: { value: new THREE.Vector3(...pal.dust) } });
+    this.chunks = particles(this.group, { max: 1200, seed: 91, vs: GL.WALL_VS, fs: GL.WALL_FS, uniforms: U(0), blend: "premult", order: 3 });
+    this.dust = particles(this.under, { max: 500, seed: 92, vs: GL.WALL_VS, fs: GL.WALL_FS, uniforms: U(1), blend: "premult", order: 1 });
+    this.chunks.geo.instanceCount = Math.min(1200, Math.round(len * 9 * q) + 10);
+    this.dust.geo.instanceCount = Math.min(500, Math.round(len * 3.2 * q) + 6);
+    // The wall line: cracks before it goes, a seam of light when it closes again
+    this.seam = quad(this.group, GL.QUAD_VS, GL.SEAM_FS, { uNoise: { value: overlay.noise }, uT: { value: 0 }, uRev: { value: req.rebuild ? 1 : 0 }, uLen: { value: len },
+      uCol: { value: new THREE.Vector3(...(req.rebuild ? [1, 0.9, 0.7] : [1, 0.75, 0.45])) } }, { order: 4, visible: true });
+    const mid = req.a.clone().add(req.b).multiplyScalar(0.5), d = req.b.clone().sub(req.a);
+    this.seam.position.set(mid.x, mid.y, 0); this.seam.rotation.z = Math.atan2(d.y, d.x); this.seam.scale.set(len + 0.6, 1.6, 1);
+    this.elevation = 0;
+    if (!req.rebuild) overlay.punch({ shake: 0.7, zoom: 0.025, at: mid });
+  }
+
+  update(dt) {
+    this.clock += dt;
+    const T = this.clock;
+    for (const l of [this.chunks, this.dust]) {
+      l.u.uT.value = T;
+      // Break: the chunks fade as the rubble on the floor takes over; rebuild: everything is gone when the wall closes
+      l.u.uFade.value = this.req.rebuild ? 1 - Math.max(0, (T - this.dur + 0.3) / 0.3) : 1 - Math.max(0, Math.min(1, (T - (this.dur - 0.9)) / 0.9));
+    }
+    this.seam.material.uniforms.uT.value = T;
+    return T < this.dur;
+  }
+
+  dispose() { disposeGroup(this.under); disposeGroup(this.group); }
+}

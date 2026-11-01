@@ -6,6 +6,7 @@ import { AuraManager } from "./core/auras.js";
 import { AreaEffect } from "./effects/area.js";
 import { StrikeEffect } from "./effects/strike.js";
 import { GlowEffect } from "./effects/glow.js";
+import { WallEffect } from "./effects/wall.js";
 import { resolveSpell, resolveStrike } from "./resolver.js";
 import { PRESETS } from "./data/presets.js";
 import { seedFrom } from "./core/util.js";
@@ -300,19 +301,22 @@ export class Director {
     this.playGlow({ plan, caster, targets, outcome: "affected", seed: Math.floor(Math.random() * 1e9) });
   }
 
-  /** A wall gives way: a line of rubble and dust bursts out along it, from one end to the other. */
-  playCollapse(c, material = "stone") {
+  /** A wall gives way (chunks fly away from the blast and land as rubble), or is put back (the rubble flies home). */
+  playCollapse(c, material = "stone", fromPx = null) { this.#wall(c, material, fromPx, false); }
+  playRebuild(c, material = "stone") { this.#wall(c, material, null, true); }
+
+  #wall(c, material, fromPx, rebuild) {
     if (!this.enabled || !c) return;
     const o = this.overlay;
     const a = o.toFeet({ x: c[0], y: c[1] }), b = o.toFeet({ x: c[2], y: c[3] });
-    const len = a.distanceTo(b);
-    if (len < 0.5) return;
-    const p = PRESETS[material === "wood" ? "std-timber" : "std-scatter-scree"];
-    const look = { ...p, material: material === "metal" ? "metal" : material === "wood" ? "wood" : "stone", emit: 0.45, knockback: 0.5, punch: 1.2, hitstop: 0 };
-    const dir = b.clone().sub(a).normalize();
-    this.#add(new AreaEffect(o, this.fx, { recipe: "breath", look, origin: a, dir, targets: [], seed: Math.floor(Math.random() * 1e9),
-      shape: { mode: 1, length: len, width: 4 }, collapse: true }));
-    o.punch({ shake: 0.6, zoom: 0.02, at: a.clone().add(b).multiplyScalar(0.5) });
+    if (a.distanceTo(b) < 0.5) return;
+    let side = 0;
+    if (fromPx) {
+      const f = o.toFeet({ x: fromPx[0], y: fromPx[1] }), mid = a.clone().add(b).multiplyScalar(0.5);
+      const d = b.clone().sub(a).normalize(), n = new THREE.Vector2(-d.y, d.x);
+      side = Math.sign(mid.clone().sub(f).dot(n)) || 0;
+    }
+    this.#add(new WallEffect(o, { a, b, material, side, rebuild }));
   }
 
   reset() {

@@ -906,3 +906,98 @@ void main(){
   vec3 col = vec3(0.32, 0.29, 0.25)*(0.35 + 0.9*lit);
   gl_FragColor = vec4(col*body, body*uGain);
 }`;
+
+/* ---------------- Walls: a breaking (or rebuilding) wall ----------------
+ * One instanced quad per chunk or dust puff. Chunks fly out from the wall line, tumbling, and land as rubble
+ * (mostly on the far side from the blast); dust rolls out and settles. uRev = 1 plays it backwards: the rubble rises
+ * and flies back into the wall. */
+export const WALL_VS = `
+attribute vec4 aSeed;
+attribute float aBirth;
+attribute float aLife;
+uniform vec2 uA, uB;
+uniform float uT, uSide, uMode, uRev, uSize, uFade;
+varying vec2 vUv; varying vec4 vSeed; varying float vAlpha; varying float vHop; varying float vT;
+vec2 rot2(vec2 v, float a){ float c = cos(a), s = sin(a); return vec2(c*v.x - s*v.y, s*v.x + c*v.y); }
+void main(){
+  vec2 e = uB - uA; float L = max(length(e), 0.01); vec2 t = e/L; vec2 n = vec2(-t.y, t.x);
+  float u = aSeed.x;
+  vec2 base = uA + e*u;
+  float side = uSide == 0.0 ? (aSeed.y < 0.5 ? -1.0 : 1.0) : (aSeed.y < 0.8 ? uSide : -uSide);
+  float dust = step(0.5, uMode);
+  float slab0 = step(0.9, fract(aSeed.y*13.7 + aSeed.w*5.3))*(1.0 - dust);
+  float dist = mix(0.35 + 3.2*pow(aSeed.z, 1.7), 0.6 + 3.8*aSeed.z, dust)*(1.0 - slab0*0.55);
+  vec2 rest = base + n*side*dist + t*(aSeed.w - 0.5)*mix(1.6, 2.6, dust);
+  // The break runs along the wall from where it was hit (the middle when there is no blast)
+  float delay = abs(u - 0.5)*0.22 + aBirth*0.08;
+  float flight = mix(0.42 + 0.35*aLife, 1.6 + 0.8*aLife, dust);
+  float k = clamp((uT - delay)/flight, 0.0, 1.0);
+  if(uRev > 0.5) k = 1.0 - clamp((uT - (0.25 - delay*0.6))/flight, 0.0, 1.0);
+  float ease = 1.0 - pow(1.0 - k, mix(3.0, 2.0, dust));
+  vec2 p = mix(base + n*side*0.1, rest, ease);
+  float hop = 4.0*k*(1.0 - k)*(1.0 - dust)*(0.6 + 0.8*aSeed.w);
+  // A chunk that has landed sits still; one in the air tumbles and looks bigger (closer to the camera)
+  float spin = aSeed.z*6.2831 + (1.0 - ease)*(aSeed.x - 0.5)*18.0;
+  // Mostly fist-sized chunks, a few big slabs
+  float slab = step(0.9, fract(aSeed.y*13.7 + aSeed.w*5.3));
+  float size = mix(uSize*(0.22 + 0.62*aSeed.w*aSeed.w + slab*(0.9 + 0.8*aSeed.z))*(1.0 + hop*0.9), uSize*(1.0 + 3.6*ease)*(0.5 + 0.9*aSeed.w), dust);
+  vUv = uv; vSeed = aSeed; vHop = hop; vT = k;
+  float started = step(delay, uT);
+  if(uRev > 0.5) started = 1.0;
+  vAlpha = started*uFade*mix(1.0, (1.0 - k)*smoothstep(0.0, 0.08, k)*0.9, dust);
+  if(uRev > 0.5) vAlpha *= smoothstep(0.0, 0.25, uT)*mix(step(0.02, k), 1.0, dust);
+  vec2 world = p + rot2(position.xy*size, spin);
+  gl_Position = projectionMatrix*viewMatrix*vec4(world, 0.0, 1.0);
+}`;
+
+export const WALL_FS = `
+uniform sampler2D uNoise;
+uniform float uMode, uWood;
+uniform vec3 uPalA, uPalB, uDust;
+varying vec2 vUv; varying vec4 vSeed; varying float vAlpha; varying float vHop; varying float vT;
+void main(){
+  vec2 p = vUv*2.0 - 1.0;
+  if(uMode > 0.5){
+    // Dust puff: a soft, noisy cloud
+    float n = texture2D(uNoise, vUv*0.6 + vSeed.xy*5.0).r;
+    float m = (1.0 - smoothstep(0.25, 1.0, length(p)))*(0.55 + 0.6*n);
+    float a = clamp(m*vAlpha*0.42, 0.0, 1.0);
+    gl_FragColor = vec4(uDust*a, a);
+    return;
+  }
+  // Chunk: an irregular stone (or a long splinter for wood) lit from the top left, with a shadow when airborne
+  vec2 q = p; if(uWood > 0.5) q.y *= 2.6;
+  float ang = atan(q.y, q.x);
+  float sides = uWood > 0.5 ? 4.0 : 5.0 + floor(vSeed.w*3.0);
+  float seg = floor((ang + 3.14159)/6.28318*sides);
+  float edge = 0.6 + 0.32*fract(sin(seg*12.9898 + vSeed.y*78.233)*43758.5453);
+  float r = length(q);
+  float body = 1.0 - smoothstep(edge - 0.06, edge, r);
+  vec2 sp = q - vec2(0.18, -0.26)*(0.4 + vHop);
+  float shadow = (1.0 - smoothstep(edge - 0.2, edge + 0.1, length(sp)))*(1.0 - body)*0.45;
+  vec2 nrm = normalize(q + 0.001);
+  float lit = 0.5 + 0.5*dot(nrm, normalize(vec2(-0.6, 0.8)));
+  float grain = texture2D(uNoise, vUv*1.7 + vSeed.zw*3.0).r;
+  vec3 col = mix(uPalA, uPalB, clamp(lit*0.8 + grain*0.35 - 0.1, 0.0, 1.0))*(1.0 - 0.35*smoothstep(edge - 0.18, edge, r));
+  float a = clamp((body + shadow)*vAlpha, 0.0, 1.0);
+  vec3 c = col*body + vec3(0.0)*shadow;
+  gl_FragColor = vec4(c*vAlpha, a);
+}`;
+
+/** The wall line itself: jagged cracks that flash before it breaks, or a soft seam of light as it closes again. */
+export const SEAM_FS = `
+uniform sampler2D uNoise;
+uniform float uT, uRev, uLen;
+uniform vec3 uCol;
+varying vec2 vUv;
+void main(){
+  vec2 p = vec2(vUv.x, vUv.y*2.0 - 1.0);
+  float n = texture2D(uNoise, vec2(p.x*uLen*0.08, 0.31)).r - 0.5;
+  float d = abs(p.y - n*0.55);
+  float crack = exp(-d*d*260.0);
+  float branch = exp(-pow(abs(p.y + (fract(p.x*uLen*0.35) - 0.5)*0.9) , 2.0)*90.0)*step(0.7, texture2D(uNoise, vec2(p.x*uLen*0.21, 0.7)).r);
+  float ends = smoothstep(0.0, 0.04, p.x)*smoothstep(1.0, 0.96, p.x);
+  float I = uRev > 0.5 ? exp(-pow((uT - 1.05)/0.18, 2.0))*(exp(-p.y*p.y*30.0)*0.8 + crack*0.6)
+                       : (1.0 - smoothstep(0.05, 0.22, uT))*smoothstep(0.0, 0.04, uT)*(crack*1.6 + branch*0.9);
+  gl_FragColor = vec4(uCol*I*ends, 1.0);
+}`;

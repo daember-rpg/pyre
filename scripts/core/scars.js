@@ -123,11 +123,19 @@ export class ScarLayer {
     const pal = sc.mat === "wood" ? [[96, 66, 38], [122, 86, 50], [70, 48, 28]] : sc.mat === "metal" ? [[90, 94, 100], [120, 124, 130], [60, 62, 68]] : [[110, 104, 96], [138, 130, 120], [80, 75, 70]];
     // Dust band
     g.lineCap = "round";
-    g.strokeStyle = "rgba(120,110,95,0.28)"; g.lineWidth = size * 0.55;
-    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    // Dust settled around the rubble: soft, uneven patches, not a band
+    const sh = (sc.side || 0) * size * 0.3;
+    for (let i = 0, m = Math.round(L / size * 7) + 3; i < m; i++) {
+      const t = rnd(), off = sh + (rnd() - 0.5) * size * 0.9, x = x1 + ux * L * t + nx * off, y = y1 + uy * L * t + ny * off, r = size * (0.25 + rnd() * 0.45);
+      const gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, "rgba(125,115,100,0.22)"); gr.addColorStop(1, "rgba(125,115,100,0)");
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
     const n = Math.round(L / size * 26);
     for (let i = 0; i < n; i++) {
-      const t = rnd(), off = (rnd() - 0.5) * size * (0.25 + 0.6 * rnd()) * 1.3;
+      const t = rnd(), mag = size * (0.1 + 0.75 * Math.pow(rnd(), 1.5));
+      const sgn = sc.side ? (rnd() < 0.82 ? sc.side : -sc.side) : (rnd() < 0.5 ? -1 : 1);
+      const off = sgn * mag * (sc.side ? 1.15 : 0.7);
       const x = x1 + ux * L * t + nx * off, y = y1 + uy * L * t + ny * off;
       const r = size * (0.04 + Math.pow(rnd(), 2.2) * 0.13);
       const c = pal[Math.floor(rnd() * pal.length)];

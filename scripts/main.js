@@ -2,6 +2,7 @@ import { MODULE_ID } from "./constants.js";
 import { registerSettings } from "./settings.js";
 import { registerTriggers } from "./triggers/pf2e.js";
 import { Director } from "./director.js";
+import { wallTools } from "./walls.js";
 import { PyreStudio } from "./ui/studio.js";
 import { resolveSpell, resolveStrike } from "./resolver.js";
 
@@ -30,6 +31,7 @@ Hooks.once("ready", () => {
 /* Studio button in the token controls (GM only). Handles the V13+ object form and the older array form. */
 Hooks.on("getSceneControlButtons", (controls) => {
   if (!game.user?.isGM) return;
+  try { wallTools(controls); } catch (err) { console.warn("pyre | walls tools", err); }
   const tool = {
     name: "pyre-studio",
     title: "Pyre Studio",

@@ -118,7 +118,7 @@ export async function onDamageRoll(message, area) {
   const toBreak = rows.filter((r, i) => chosen.has(i));
   const damaged = rows.filter((r, i) => !chosen.has(i));
   for (const r of damaged) await r.d.setFlag(MODULE_ID, "hp", Math.max(1, r.left));
-  if (toBreak.length) await breakWalls(toBreak.map((r) => r.d));
+  if (toBreak.length) await breakWalls(toBreak.map((r) => r.d), area.originPx ?? null);
 }
 
 async function confirmDialog(name, total, rows) {
@@ -145,32 +145,55 @@ async function confirmDialog(name, total, rows) {
 }
 
 /** Break walls: they stop blocking, a collapse plays for everyone, rubble is left on the floor. */
-export async function breakWalls(docs) {
+export async function breakWalls(docs, fromPx = null) {
   const updates = docs.map((d) => ({
     _id: d.id, move: 0, sight: 0, light: 0, sound: 0,
-    [`flags.${MODULE_ID}.broken`]: { move: d.move, sight: d.sight, light: d.light, sound: d.sound, at: Date.now() },
+    [`flags.${MODULE_ID}.broken`]: { move: d.move, sight: d.sight, light: d.light, sound: d.sound, at: Date.now(), from: fromPx },
   }));
   await canvas.scene.updateEmbeddedDocuments("Wall", updates);
-  if (setting("persistentMarks", false) || setting("breakableWalls", false)) {
-    await addScars(docs.map((d) => ({ k: "rubble", c: [...d.c], mat: wallMaterial(d), seed: Math.floor(Math.random() * 1e6) })));
-  }
+  // The rubble lands on the far side from the blast, like the flying chunks
+  await addScars(docs.map((d) => ({ k: "rubble", c: [...d.c], mat: wallMaterial(d), side: sideOf(d.c, fromPx), seed: Math.floor(Math.random() * 1e6) })));
+  postRestoreCard(docs);
+}
+
+function sideOf(c, fromPx) {
+  if (!fromPx) return 0;
+  const mx = (c[0] + c[2]) / 2, my = (c[1] + c[3]) / 2, ex = c[2] - c[0], ey = c[3] - c[1];
+  // Normal in canvas pixels, matching the feet-space normal the effect uses (y flips between the two)
+  return Math.sign((my - fromPx[1]) * ex - (mx - fromPx[0]) * ey) || 0;
+}
+
+/** A card only the GMs see, with a button that puts those walls back. */
+async function postRestoreCard(docs) {
+  try {
+    const ids = docs.map((d) => d.id);
+    const gms = game.users.filter((u) => u.isGM).map((u) => u.id);
+    await ChatMessage.create({
+      content: `<div class="pyre-card"><p><i class="fa-solid fa-dungeon"></i> <b>${ids.length} parede(s) quebrada(s).</b></p>
+        <button type="button" class="pyre-restore-btn" data-walls="${ids.join(",")}"><i class="fa-solid fa-rotate-left"></i> Restaurar</button></div>`,
+      whisper: gms, speaker: { alias: "Pyre" }, flags: { [MODULE_ID]: { restoreCard: ids } },
+    });
+  } catch { /* the Studio can still restore */ }
 }
 
 /** Every client plays the collapse when a wall becomes broken. */
 export function onWallUpdate(doc, changes) {
-  const b = changes?.flags?.[MODULE_ID]?.broken;
-  if (!b || doc.parent?.id !== canvas.scene?.id) return;
-  Director.get().playCollapse(doc.c, wallMaterial(doc));
+  const f = changes?.flags?.[MODULE_ID];
+  if (!f || doc.parent?.id !== canvas.scene?.id) return;
+  if (f.broken) Director.get().playCollapse(doc.c, wallMaterial(doc), f.broken.from ?? null);
+  else if (f.restored || "-=broken" in f) Director.get().playRebuild(doc.c, wallMaterial(doc));
 }
 
-export async function restoreWalls() {
-  const docs = (canvas?.walls?.placeables ?? []).map((w) => w.document).filter(isBroken);
+export async function restoreWalls(ids = null) {
+  const docs = (canvas?.walls?.placeables ?? []).map((w) => w.document).filter((d) => isBroken(d) && (!ids || ids.includes(d.id)));
   if (!docs.length) return 0;
   await canvas.scene.updateEmbeddedDocuments("Wall", docs.map((d) => {
     const b = d.getFlag(MODULE_ID, "broken");
-    return { _id: d.id, move: b.move, sight: b.sight, light: b.light, sound: b.sound, [`flags.${MODULE_ID}.-=broken`]: null, [`flags.${MODULE_ID}.-=hp`]: null };
+    return { _id: d.id, move: b.move, sight: b.sight, light: b.light, sound: b.sound, [`flags.${MODULE_ID}.-=broken`]: null, [`flags.${MODULE_ID}.-=hp`]: null,
+      [`flags.${MODULE_ID}.restored`]: Date.now() };
   }));
-  // Take the rubble of those walls off the floor too
+  // Take the rubble of those walls off the floor once it has flown back into the wall
+  await new Promise((r) => setTimeout(r, 900));
   const key = (c) => c.map((v) => Math.round(v)).join(",");
   const gone = new Set(docs.map((d) => key(d.c)));
   const scars = canvas.scene.getFlag(MODULE_ID, "scars") ?? [];
@@ -186,3 +209,40 @@ export async function setMaterial(docs, mat) {
 }
 
 export function brokenCount() { return (canvas?.walls?.placeables ?? []).filter((w) => isBroken(w.document)).length; }
+
+/** A "Material (Pyre)" field in the wall's own configuration sheet. Saves the moment it changes. */
+export function injectWallConfig(app, html) {
+  if (!game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  const doc = app.document ?? app.object;
+  if (!root || !doc || root.querySelector(".pyre-wall-material")) return;
+  const cur = doc.getFlag(MODULE_ID, "material") ?? "";
+  const def = MATERIALS[setting("defaultWallMaterial", "stone")]?.name ?? "";
+  const group = document.createElement("div");
+  group.className = "form-group pyre-wall-material";
+  const opts = [`<option value="">Padrão da cena (${def})</option>`]
+    .concat(Object.entries(MATERIALS).map(([id, m]) => `<option value="${id}" ${id === cur ? "selected" : ""}>${m.name}${Number.isFinite(m.hp) ? ` — Dureza ${m.hardness}, ${m.hp} PV` : ""}</option>`));
+  group.innerHTML = `<label>Material (Pyre)</label><div class="form-fields"><select data-pyre="material">${opts.join("")}</select></div>
+    <p class="hint">Usado pelas paredes que quebram. Salva na hora.</p>`;
+  const sel = group.querySelector("select");
+  sel.addEventListener("change", async (ev) => {
+    ev.stopPropagation();
+    if (sel.value) await doc.setFlag(MODULE_ID, "material", sel.value);
+    else await doc.unsetFlag(MODULE_ID, "material");
+    await doc.unsetFlag?.(MODULE_ID, "hp");
+  });
+  const anchor = root.querySelector("form .form-group, .form-group");
+  if (anchor?.parentElement) anchor.parentElement.insertBefore(group, anchor);
+  else (root.querySelector("form") ?? root).prepend(group);
+  app.setPosition?.({ height: "auto" });
+}
+
+/** Walls layer tools for the GM: put every broken wall back, and open the Scene tools. */
+export function wallTools(controls, openStudio) {
+  if (!game.user?.isGM) return;
+  const restore = { name: "pyre-restore-walls", title: "Pyre: restaurar paredes quebradas", icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
+    onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? `Pyre: ${n} parede(s) restaurada(s).` : "Pyre: nenhuma parede quebrada nesta cena.")) };
+  restore.onClick = restore.onChange;
+  if (Array.isArray(controls)) controls.find((c) => c.name === "walls")?.tools?.push(restore);
+  else { const w = controls.walls; if (w?.tools) w.tools["pyre-restore-walls"] = restore; }
+}

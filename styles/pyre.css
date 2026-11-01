@@ -62,3 +62,6 @@
 .pyre-wall-list { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; max-height: 50vh; overflow-y: auto; }
 .pyre-wall-row { display: flex; align-items: flex-start; gap: 8px; }
 .pyre-wall-row em { color: #e8743b; font-style: normal; font-weight: 600; }
+.pyre-card p { margin: 0 0 6px; }
+.pyre-card .pyre-restore-btn { width: 100%; }
+.pyre-wall-material .hint { flex: 0 0 100%; }

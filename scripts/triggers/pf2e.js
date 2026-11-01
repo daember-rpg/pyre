@@ -3,14 +3,16 @@ import { MODULE_ID, CAST_OPTION, CONJURE_ID, debug, report, fail } from "../cons
 import { Director } from "../director.js";
 import { resolveSpell, resolveStrike } from "../resolver.js";
 import { seedFrom } from "../core/util.js";
-import { onDamageRoll, onWallUpdate } from "../walls.js";
+import { onDamageRoll, onWallUpdate, restoreWalls, injectWallConfig } from "../walls.js";
 import { addScars, SCAR_ELEMENTS } from "../core/scars.js";
 
 /** Areas that just played, by the item that made them: a later damage roll can break the walls they reached. */
 const recentAreas = new Map();
 function rememberArea(item, plan, shape, caster) {
   const key = item?.uuid; if (!key) return;
-  recentAreas.set(key, { shape, plan, name: item.name, at: Date.now(), sceneId: canvas.scene?.id });
+  const o = Director.get().overlay;
+  const op = o.toPx(shape.center ?? shape.origin);
+  recentAreas.set(key, { shape, plan, name: item.name, at: Date.now(), sceneId: canvas.scene?.id, originPx: [op.x, op.y] });
   for (const [k, v] of recentAreas) if (Date.now() - v.at > 10 * 60 * 1000) recentAreas.delete(k);
   leaveMarks(plan, shape, caster).catch(() => {});
 }
@@ -375,6 +377,22 @@ async function onArea(doc, shape) {
   rememberArea(item, plan, shape, caster);
 }
 
+/* -------------------- broken walls: the GM's restore button -------------------- */
+
+function addRestoreButton(message, html) {
+  const ids = message.flags?.[MODULE_ID]?.restoreCard;
+  if (!ids || !game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  const btn = root?.querySelector(".pyre-restore-btn");
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = "1";
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    const n = await restoreWalls(ids);
+    btn.innerHTML = n ? '<i class="fa-solid fa-check"></i> Restauradas' : '<i class="fa-solid fa-check"></i> Já estavam de pé';
+  });
+}
+
 /* -------------------- reveal buttons for the GM -------------------- */
 
 function addRevealButtons(message, html) {
@@ -426,7 +444,8 @@ export function registerTriggers() {
     onChatMessage(message).catch((err) => fail("reveal", err));
   });
 
-  Hooks.on("renderChatMessageHTML", (message, html) => addRevealButtons(message, html));
+  Hooks.on("renderChatMessageHTML", (message, html) => { addRevealButtons(message, html); addRestoreButton(message, html); });
+  Hooks.on("renderWallConfig", (app, html) => { try { injectWallConfig(app, html); } catch (err) { fail("wall sheet", err); } });
 
   // Breakable walls: everyone sees the collapse; lasting marks follow the scene's flags
   Hooks.on("updateWall", (doc, changes) => { try { onWallUpdate(doc, changes); } catch (err) { fail("wall", err); } });

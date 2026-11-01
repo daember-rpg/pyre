@@ -42,6 +42,16 @@ World: animate spells, animate strikes, animate posted (not cast) spell cards, a
 
 With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
 
+## Changes in 0.5.1
+
+* New wall break: the wall cracks with a flash, then chunks (and a few big slabs) fly out, mostly away from the blast, tumble and land as rubble in a cloud of dust; the rubble left on the floor lies on that same side.
+* Restoring a wall plays it backwards: the rubble rises, flies back into the wall and the wall closes with a seam of light.
+* Easier restore:
+  * a card only the GM sees after each break, with a **Restaurar** button for those walls;
+  * a **restore broken walls** button in the Walls layer controls;
+  * Pyre Studio → Scene, as before.
+* **Material (Pyre)** field in each wall's own configuration sheet (double-click a wall), saved the moment it changes. Selecting several walls and setting them in Pyre Studio → Scene still works.
+
 ## Changes in 0.5.0
 
 * **Breakable walls** (world setting, off by default). After an area's damage roll (spells and creature abilities such as Breath Weapon), the walls the blast reaches take the damage minus their Hardness, using PF2e's structure statistics: wood 10/40, stone 14/56, iron 18/72, glass 2/8, or unbreakable. You confirm which walls break; the rest keep their damage. A broken wall stops blocking movement, sight, light and sound, collapses in splinters or rubble for everyone, and leaves rubble on the floor.
