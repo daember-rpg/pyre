@@ -69,6 +69,36 @@ float area(vec2 w, float L, float inset, float soft){
 }
 `;
 
+/** Walls near the effect, as segments in feet. A particle whose path from its start crosses one bounces back
+ *  off it: the part of the path beyond the wall is mirrored to this side and shortened by the restitution. */
+export const WALLS_GLSL = `
+uniform vec4 uWalls[24];
+uniform float uWallN, uBounce;
+float bounceWalls(vec2 s, inout vec2 p, inout vec2 vel){
+  if(uWallN < 0.5) return 0.0;
+  vec2 d = p - s;
+  float best = 1.0; vec2 hit = p; vec2 nrm = vec2(0.0);
+  for(int i = 0; i < 24; i++){
+    if(float(i) >= uWallN) break;
+    vec4 w = uWalls[i];
+    vec2 e = w.zw - w.xy;
+    float den = d.x*e.y - d.y*e.x;
+    if(abs(den) < 1e-6) continue;
+    vec2 as = w.xy - s;
+    float t = (as.x*e.y - as.y*e.x)/den;
+    float u = (as.x*d.y - as.y*d.x)/den;
+    if(t > 0.0 && t < best && u >= 0.0 && u <= 1.0){ best = t; hit = s + d*t; nrm = normalize(vec2(-e.y, e.x)); }
+  }
+  if(best >= 1.0) return 0.0;
+  if(dot(s - hit, nrm) < 0.0) nrm = -nrm;          // face the side the particle came from
+  vec2 over = p - hit;
+  vec2 refl = over - 2.0*dot(over, nrm)*nrm;
+  p = hit + refl*uBounce + nrm*0.12;
+  vel = (vel - 2.0*dot(vel, nrm)*nrm)*uBounce;
+  return 1.0;
+}
+`;
+
 export const PARTICLE_ATTRS = `
 attribute vec4 aSeed;
 attribute float aBirth;
@@ -79,7 +109,7 @@ varying vec4 vSeed;
 varying float vAlive;
 `;
 
-export const FIRE_VS = COMMON + PARTICLE_ATTRS + `
+export const FIRE_VS = COMMON + WALLS_GLSL + PARTICLE_ATTRS + `
 uniform float uLifeMin, uLifeMax;
 varying float vHeat;
 void main(){
@@ -128,6 +158,7 @@ void main(){
   float amp = uTurb*(0.5 + d*0.11)*smoothstep(0.0,0.55,t)*mix(1.0,0.35,L1)*mix(1.0, 0.7, B);
   vec3 q = vec3(p*0.09, uTime*0.7 + uSeedOff);
   p += vec2(snoise(q), snoise(q+vec3(31.4,17.2,5.1)))*amp;
+  { vec2 s0 = uOrigin + perp*dot(p - uOrigin, perp)*L1; vec2 vv = vec2(0.0); bounceWalls(s0, p, vv); }
   float size = uSize*(0.9+3.4*pow(t,0.75))*(0.7+0.6*aSeed.w)*mix(0.55+0.45*min(d/8.0,1.0), 1.0, B)*mix(1.0,0.62,L1)*scaleK;
   float ang2 = aSeed.z*6.2831 + age*(aSeed.x-0.5)*3.0;
   vec2 c = rot2(position.xy*size, ang2);
@@ -167,7 +198,7 @@ void main(){
   }
 }`;
 
-export const SMOKE_VS = COMMON + PARTICLE_ATTRS + `
+export const SMOKE_VS = COMMON + WALLS_GLSL + PARTICLE_ATTRS + `
 uniform float uLifeMin, uLifeMax;
 uniform vec2 uWind;
 void main(){
@@ -191,6 +222,7 @@ void main(){
   if(uMode > 2.5) p = uOrigin + (vec2(fract(aSeed.y*7.13 + aSeed.w), aSeed.x) - 0.5)*uLength + uWind*age;
   vec3 q = vec3(p*0.05, uTime*0.22 + aSeed.z*5.0 + uSeedOff);
   p += vec2(snoise(q), snoise(q+vec3(12.3,4.5,7.8)))*uTurb*(1.5+5.0*t);
+  { vec2 vv = vec2(0.0); bounceWalls(start, p, vv); }
   float size = uSize*(2.0+5.5*pow(t,0.7))*(0.7+0.6*aSeed.w)*mix(1.0,0.8,L1)*mix(1.0, clamp(uLength/18.0,0.45,1.1), B);
   float a = aSeed.z*6.2831 + age*(aSeed.x-0.5)*0.6;
   gl_Position = projectionMatrix*viewMatrix*vec4(p + rot2(position.xy*size, a), 0.0, 1.0);
@@ -213,7 +245,7 @@ void main(){
   gl_FragColor = vec4(col, clamp(a,0.0,1.0));
 }`;
 
-export const EMBER_VS = COMMON + PARTICLE_ATTRS + `
+export const EMBER_VS = COMMON + WALLS_GLSL + PARTICLE_ATTRS + `
 uniform float uLifeMin, uLifeMax, uEmberDrag, uEmberSpeed, uEmberSize, uEmberStreak, uEmberMode, uEmberBurst, uEmberScatter;
 varying float vMode;
 varying float vPop;
@@ -250,6 +282,7 @@ void main(){
   vec2 n = vec2(snoise(q), snoise(q+vec3(9.1,3.3,1.7)));
   p += n*uTurb*1.6*t;
   vel += n*uTurb*3.0;
+  bounceWalls(start, p, vel);
   float sz = uEmberSize*(0.6+0.8*aSeed.w)*(1.0 + isB*0.5);
   if(uEmberMode > 1.5) sz *= (1.0 - t*0.6);
   float speed = length(vel);

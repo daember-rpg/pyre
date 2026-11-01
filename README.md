@@ -42,6 +42,10 @@ World: animate spells, animate strikes, animate posted (not cast) spell cards, a
 
 With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
 
+## Changes in 0.4.1
+
+* Flames, sparks, embers and smoke bounce off walls instead of being cut by them: whatever reaches a wall that blocks movement rebounds with some of its speed and piles up along it. Strike sparks and dust bounce off nearby walls too. Follows the *Walls stop areas* setting.
+
 ## Changes in 0.4.0
 
 * Floor effects are drawn beneath the tokens, inside Foundry's own canvas (between tiles and tokens, like Sequencer's "below tokens"): floor light, scorch and frost, gashes and cracks, smoke and dust, casting circles and auras that sit at the feet. Flames, projectiles and lightning stay above. If Foundry's canvas does not accept the layer, everything is drawn above as before. Setting: *Floor effects under tokens* (per computer).

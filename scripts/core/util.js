@@ -70,3 +70,41 @@ export const BLEND = {
   normal: { blending: THREE.NormalBlending },
   premult: { blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor },
 };
+
+/**
+ * Walls near a point, for the particle bounce: segments in feet (x1, y1, x2, y2) that block movement and are not open doors.
+ * Writes into a uniform set { uWalls: [Vector4 x24], uWallN, uBounce }.
+ */
+export function setWalls(U, overlay, centerFt, radiusFt) {
+  U.uWallN.value = 0;
+  try {
+    const walls = canvas?.walls?.placeables ?? [];
+    if (!walls.length) return 0;
+    const k = overlay.ppf, cx = centerFt.x * k, cy = -centerFt.y * k, R = radiusFt * k;
+    const near = [];
+    for (const w of walls) {
+      const d = w.document ?? w;
+      const c = d.c;
+      if (!c || c.length < 4) continue;
+      if (d.move === 0) continue;                       // does not block movement
+      if (d.door > 0 && d.ds === 1) continue;            // open door
+      // Distance from the center to the segment
+      const ex = c[2] - c[0], ey = c[3] - c[1], L2 = ex * ex + ey * ey || 1;
+      const t = Math.max(0, Math.min(1, ((cx - c[0]) * ex + (cy - c[1]) * ey) / L2));
+      const dist = Math.hypot(c[0] + ex * t - cx, c[1] + ey * t - cy);
+      if (dist <= R) near.push([dist, c]);
+    }
+    near.sort((a, b) => a[0] - b[0]);
+    const n = Math.min(24, near.length);
+    for (let i = 0; i < n; i++) {
+      const c = near[i][1];
+      U.uWalls.value.set([c[0] / k, -c[1] / k, c[2] / k, -c[3] / k], i * 4);
+    }
+    U.uWallN.value = n;
+    return n;
+  } catch { return 0; }
+}
+export function wallUniforms() {
+  // A flat array: the trimmed three.js has no Vector4, and three accepts flat arrays for vec4[] uniforms
+  return { uWalls: { value: new Float32Array(24 * 4) }, uWallN: { value: 0 }, uBounce: { value: 0.45 } };
+}

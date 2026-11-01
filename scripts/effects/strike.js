@@ -3,7 +3,7 @@ import { MODULE_ID } from "../constants.js";
 import * as GL from "../core/shaders-lab.js";
 import { CUT_FS, FLOOR_FS, GHOST_FS, MARK_FS } from "../core/shaders-pyre.js";
 import { particles, quad, material, setBlend, disposeGroup } from "../core/layers.js";
-import { clamp, smoothstep, v3, mulberry32 } from "../core/util.js";
+import { clamp, smoothstep, v3, mulberry32, setWalls, wallUniforms } from "../core/util.js";
 import { WEAPONS, PALETTES, RUNES, BOMBS, BOMB_SIZE, STRIKING_WEIGHT } from "../data/strikes.js";
 
 function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
@@ -90,7 +90,10 @@ export class StrikeEffect {
       uTime: { value: -1 }, uEmit: { value: 0.15 }, uLength: { value: 4 }, uHalfAng: { value: 0 }, uHalfTan: { value: 0 }, uLineWidth: { value: 0 },
       uMode: { value: 2 }, uTurb: { value: 0.8 }, uSize: { value: 1.4 }, uSeedOff: { value: (this.req.seed ?? 1) % 300 }, uEdgeNoise: { value: 1 },
       uOrigin: { value: plan.impact.clone() }, uDir: { value: plan.dir.clone() }, uNoise: { value: noise },
+      ...wallUniforms(),
     };
+    // Sparks, rune fire and dust that fly into a nearby wall bounce off it
+    if (setting("wallsBlock", true) !== false) setWalls(U, this.o, plan.impact, 12);
     const emberU = () => ({
       uLifeMin: { value: 0.5 }, uLifeMax: { value: 1.2 }, uEmberDrag: { value: 2 }, uEmberSpeed: { value: 1 }, uEmberSize: { value: 0.2 },
       uEmberStreak: { value: 0.04 }, uEmberMode: { value: 0 }, uEmberBurst: { value: 0 }, uEmberScatter: { value: 0 },

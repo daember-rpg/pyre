@@ -3,7 +3,7 @@ import { MODULE_ID } from "../constants.js";
 import * as GL from "../core/shaders-lab.js";
 import { FLOOR_FS } from "../core/shaders-pyre.js";
 import { particles, quad, material, setBlend, disposeGroup } from "../core/layers.js";
-import { clamp, smoothstep, mixA, scaleA, v3, luma, linear, mulberry32 } from "../core/util.js";
+import { clamp, smoothstep, mixA, scaleA, v3, luma, linear, mulberry32, setWalls, wallUniforms } from "../core/util.js";
 import { ELEMENTS, RECIPES, OUTCOMES, QUALITY, MATERIALS, MAX } from "../data/looks.js";
 import { base as LOOK_BASE } from "../data/presets.js";
 
@@ -63,6 +63,7 @@ export class AreaEffect {
       uTime: { value: -1 }, uEmit: { value: 1 }, uLength: { value: 30 }, uHalfAng: { value: 0 }, uHalfTan: { value: 0 }, uLineWidth: { value: 0 },
       uMode: { value: 0 }, uTurb: { value: 1 }, uSize: { value: 1.4 }, uSeedOff: { value: this.seedOff }, uEdgeNoise: { value: 1 },
       uOrigin: { value: new THREE.Vector2() }, uDir: { value: new THREE.Vector2(1, 0) }, uNoise: { value: noise },
+      ...wallUniforms(),
     };
     const C = this.C = {
       uC0: { value: new THREE.Vector3() }, uC1: { value: new THREE.Vector3() }, uC2: { value: new THREE.Vector3() }, uC3: { value: new THREE.Vector3() },
@@ -652,6 +653,8 @@ export class AreaEffect {
     try {
       const o = this.U.uOrigin.value, k = this.o.ppf;
       const L = Math.max(this.U.uLength.value, r.side ?? 0);
+      // Flames, sparks and smoke that reach a wall bounce off it
+      setWalls(this.U, this.o, o, L * 1.3 + 8);
       const originPx = this.o.toPx(o);
       // The origin of a breath sits on the dragon's edge; step a hair forward so its own token wall does not swallow it
       const backend = globalThis.CONFIG?.Canvas?.polygonBackends?.move ?? foundry?.canvas?.geometry?.ClockwiseSweepPolygon;
