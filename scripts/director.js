@@ -9,6 +9,7 @@ import { GlowEffect } from "./effects/glow.js";
 import { resolveSpell, resolveStrike } from "./resolver.js";
 import { PRESETS } from "./data/presets.js";
 import { seedFrom } from "./core/util.js";
+import { ScarLayer } from "./core/scars.js";
 
 function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
 
@@ -28,6 +29,7 @@ export class Director {
     this.overlay = Overlay.get();
     this.fx = new TokenFX(this.overlay);
     this.auras = new AuraManager(this.overlay);
+    this.scars = new ScarLayer();
     this.pendingReveal = new Set();
     this.revealStarted = new Set();
   }
@@ -296,6 +298,21 @@ export class Director {
   playTestGlow(tradition, intent, caster, targets) {
     const plan = { kind: "glow", intent, tradition };
     this.playGlow({ plan, caster, targets, outcome: "affected", seed: Math.floor(Math.random() * 1e9) });
+  }
+
+  /** A wall gives way: a line of rubble and dust bursts out along it, from one end to the other. */
+  playCollapse(c, material = "stone") {
+    if (!this.enabled || !c) return;
+    const o = this.overlay;
+    const a = o.toFeet({ x: c[0], y: c[1] }), b = o.toFeet({ x: c[2], y: c[3] });
+    const len = a.distanceTo(b);
+    if (len < 0.5) return;
+    const p = PRESETS[material === "wood" ? "std-timber" : "std-scatter-scree"];
+    const look = { ...p, material: material === "metal" ? "metal" : material === "wood" ? "wood" : "stone", emit: 0.45, knockback: 0.5, punch: 1.2, hitstop: 0 };
+    const dir = b.clone().sub(a).normalize();
+    this.#add(new AreaEffect(o, this.fx, { recipe: "breath", look, origin: a, dir, targets: [], seed: Math.floor(Math.random() * 1e9),
+      shape: { mode: 1, length: len, width: 4 }, collapse: true }));
+    o.punch({ shake: 0.6, zoom: 0.02, at: a.clone().add(b).multiplyScalar(0.5) });
   }
 
   reset() {

@@ -648,7 +648,7 @@ export class AreaEffect {
   #wallMask() {
     this.reach = null;
     const r = this.req;
-    if (!["breath", "fireball", "point", "column", "field"].includes(r.recipe)) return;
+    if (!["breath", "fireball", "point", "column", "field"].includes(r.recipe) || r.collapse) return;
     if (setting("wallsBlock", true) === false) return;
     try {
       const o = this.U.uOrigin.value, k = this.o.ppf;

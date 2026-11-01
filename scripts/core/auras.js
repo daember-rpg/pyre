@@ -8,9 +8,12 @@ import { tokenFt, tokenRadiusFt } from "./tokens.js";
 function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
 const PLANE = new THREE.PlaneGeometry(1, 1);
 const MAX_PER_TOKEN = 3;
-const PRIORITY = ["shielded", "burning", "frightened", "slowed", "quickened", "hexed", "blessed", "bleeding", "sickened", "invisible"];
+const PRIORITY = ["shielded", "burning", "frightened", "slowed", "quickened", "hexed", "blessed", "lit", "bleeding", "sickened", "invisible"];
 
 /** Which auras an actor should show, from its PF2e conditions and effects. */
+/** Spell effects that get their own aura instead of the generic blessing or hex. */
+const SPELL_AURAS = { "spell-effect-light": "lit", "spell-effect-dancing-lights": "lit" };
+
 export function aurasFor(actor, token) {
   const out = new Map();
   if (!actor) return out;
@@ -26,6 +29,8 @@ export function aurasFor(actor, token) {
     } else if (item.type === "effect") {
       if (/shield|mystic-armor|protective-ward/.test(slug)) { out.set("shielded", null); continue; }
       if (!slug.startsWith("spell-effect-")) continue;
+      // Spells with a look of their own
+      if (SPELL_AURAS[slug]) { out.set(SPELL_AURAS[slug], null); continue; }
       // Who cast it decides blessing or hex: same side as this token helps, the other side hinders.
       const ctx = item.system?.context?.origin ?? {};
       const tradition = ctx.spellcasting?.tradition ?? null;

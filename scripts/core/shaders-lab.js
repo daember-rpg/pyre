@@ -830,6 +830,21 @@ void main(){
     float sweep = exp(-pow(fract(p.x*0.35 + p.y*0.35 - t*0.25) - 0.5, 2.0)*80.0);
     add += uTint*shell*(0.35 + hexEdge*0.8 + sweep*1.2);
     add += uTint*ring(r, R, 0.012)*1.2;
+  } else if(uStyle > 9.5){
+    // Lit (the Light spell): a warm pool of lantern light on the floor and a small flame bobbing beside the token
+    float flick = 0.88 + 0.08*sin(t*7.3) + 0.05*sin(t*13.1 + 1.7) + 0.04*texture2D(uNoise, vec2(t*0.11, uSeed)).r;
+    add += uTint*smoothstep(1.0, D*0.95, r)*0.32*flick;
+    add += uTint*exp(-pow(max(r - D, 0.0)/0.07, 2.0))*0.22*step(D*0.95, r)*flick;
+    float oa = t*0.45 + uSeed*6.0;
+    vec2 oc = vec2(cos(oa), sin(oa))*D*1.22 + vec2(0.0, 0.04*sin(t*1.9));
+    float od = length(p - oc);
+    add += mix(uTint, vec3(1.0), 0.6)*exp(-od*od/0.0009)*2.2*flick + uTint*exp(-od*od/0.012)*0.55*flick;
+    for(int i = 0; i < 5; i++){
+      float h = hash(float(i)*2.7 + uSeed*5.0);
+      float life = fract(t*0.5 + h);
+      vec2 c = oc + vec2((h - 0.5)*0.08, life*0.12);
+      add += uTint*exp(-dot(p - c, p - c)/0.00012)*sin(life*PI)*0.9;
+    }
   } else {
     // Invisible: a faint heat-shimmer outline
     float n = texture2D(uNoise, vec2(a*0.6, t*0.2)).r;

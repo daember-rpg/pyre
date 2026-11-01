@@ -42,6 +42,14 @@ World: animate spells, animate strikes, animate posted (not cast) spell cards, a
 
 With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
 
+## Changes in 0.5.0
+
+* **Breakable walls** (world setting, off by default). After an area's damage roll (spells and creature abilities such as Breath Weapon), the walls the blast reaches take the damage minus their Hardness, using PF2e's structure statistics: wood 10/40, stone 14/56, iron 18/72, glass 2/8, or unbreakable. You confirm which walls break; the rest keep their damage. A broken wall stops blocking movement, sight, light and sound, collapses in splinters or rubble for everyone, and leaves rubble on the floor.
+  * Pyre Studio → **Scene**: give selected walls a material, break selected walls by hand, restore every broken wall (and its rubble).
+  * Setting **Wall material (default)** for walls without one.
+* **Lasting marks** (world setting, off by default): fire, cold, acid, electricity, sonic, force and kinetic areas leave scorch, frost, acid burns or cracks on the map, stopped by walls, until you clear them in Pyre Studio → Scene. Drawn once into the scene, beneath the tokens.
+* **Light** has its own aura: a warm pool of lantern light at the creature's feet and a small flame bobbing beside it, instead of the generic blessing.
+
 ## Changes in 0.4.1
 
 * Flames, sparks, embers and smoke bounce off walls instead of being cut by them: whatever reaches a wall that blocks movement rebounds with some of its speed and piles up along it. Strike sparks and dust bounce off nearby walls too. Follows the *Walls stop areas* setting.

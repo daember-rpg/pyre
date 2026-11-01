@@ -37,6 +37,11 @@ export function registerSettings() {
   });
 
   world("wallsBlock", { name: "Walls stop areas", hint: "Bursts, breaths and other areas stop at walls that block movement, and creatures behind them do not react.", type: Boolean, default: true });
+  world("breakableWalls", { name: "Breakable walls", hint: "After an area's damage roll, walls it reaches take the damage minus their Hardness. You confirm which ones break; Pyre Studio restores them.", type: Boolean, default: false });
+  world("defaultWallMaterial", { name: "Wall material (default)", hint: "For walls without their own material. Set walls one by one in Pyre Studio → Scene.", type: String,
+    choices: { stone: "Stone (Hardness 14, 56 HP)", wood: "Wood (Hardness 10, 40 HP)", metal: "Iron / steel (Hardness 18, 72 HP)", glass: "Glass (Hardness 2, 8 HP)", none: "Unbreakable" }, default: "stone" });
+  world("persistentMarks", { name: "Lasting marks", hint: "Scorch, frost and acid burns stay on the map after an area spell, until you clear them in Pyre Studio → Scene.", type: Boolean, default: false,
+    onChange: () => Director.get().scars.refresh() });
   world("spells", { name: "Animate spells", hint: "Casts, spell attacks and templates.", type: Boolean, default: true });
   world("strikes", { name: "Animate strikes", hint: "Weapon, unarmed and NPC attacks.", type: Boolean, default: true });
   world("animatePostedCards", {

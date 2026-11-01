@@ -17,5 +17,6 @@ export const AURAS = {
   burning:    { name: "Burning",    style: 6, layer: "over",  tint: [1.0, 0.5, 0.12],  dot: "#ff8a1c", from: "persistent fire damage" },
   bleeding:   { name: "Bleeding",   style: 7, layer: "over",  tint: [0.6, 0.03, 0.04], dot: "#c43a3a", from: "persistent bleed damage" },
   shielded:   { name: "Shielded",   style: 8, layer: "over",  tint: [0.55, 0.6, 1.0],  dot: "#6a5cff", from: "effects like Shield or Mystic Armor" },
+  lit:        { name: "Lit", style: 10, layer: "under", tint: [1.0, 0.82, 0.52], dot: "#ffd38a", from: "the Light spell" },
   invisible:  { name: "Invisible",  style: 9, layer: "over",  tint: [0.75, 0.9, 1.0],  dot: "#cfe6ff", from: "condition: invisible (GM view)", alpha: 0.35 },
 };

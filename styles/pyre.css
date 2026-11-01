@@ -57,3 +57,8 @@
 .pyre-debug-entry.err { border-left-color: #e04a3a; }
 .pyre-debug-entry.err strong { color: #ff7a6b; }
 .pyre-debug-entry.fade { opacity: 0; }
+
+/* Breakable walls dialog */
+.pyre-wall-list { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; max-height: 50vh; overflow-y: auto; }
+.pyre-wall-row { display: flex; align-items: flex-start; gap: 8px; }
+.pyre-wall-row em { color: #e8743b; font-style: normal; font-weight: 600; }

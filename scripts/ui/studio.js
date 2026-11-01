@@ -4,6 +4,8 @@ import { STANDARD } from "../data/presets.js";
 import { RUNES, BOMBS } from "../data/strikes.js";
 import { TRADITIONS } from "../data/glow.js";
 import { slugOf } from "../resolver.js";
+import { MATERIALS, setMaterial, restoreWalls, breakWalls, brokenCount } from "../walls.js";
+import { clearScars } from "../core/scars.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -60,6 +62,10 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
       removeOverride: PyreStudio.#onRemoveOverride,
       saveStrikeOverride: PyreStudio.#onSaveStrikeOverride,
       removeStrikeOverride: PyreStudio.#onRemoveStrikeOverride,
+      setWallMaterial: PyreStudio.#onSetWallMaterial,
+      breakSelected: PyreStudio.#onBreakSelected,
+      restoreWalls: PyreStudio.#onRestoreWalls,
+      clearMarks: PyreStudio.#onClearMarks,
     },
   };
 
@@ -83,8 +89,16 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
       const g = { breath: "Breaths", fireball: "Lobbed bursts", point: "Bursts", column: "Columns", field: "Fields", ray: "Rays", darts: "Darts", chain: "Chains" }[p.recipe] ?? "Other";
       (groups[g] ??= []).push({ id: p.id, name: p.name });
     }
+    const mat = game.settings.get(MODULE_ID, "defaultWallMaterial");
     return {
       tab: this.tabName,
+      wallsOn: game.settings.get(MODULE_ID, "breakableWalls"),
+      marksOn: game.settings.get(MODULE_ID, "persistentMarks"),
+      defaultMat: MATERIALS[mat]?.name ?? mat,
+      materials: Object.entries(MATERIALS).map(([id, m]) => ({ id, label: Number.isFinite(m.hp) ? `${m.name} (Dureza ${m.hardness}, ${m.hp} PV)` : m.name })),
+      selectedWalls: canvas?.walls?.controlled?.length ?? 0,
+      brokenWalls: canvas?.ready ? brokenCount() : 0,
+      marks: (canvas?.scene?.getFlag(MODULE_ID, "scars") ?? []).length,
       presetGroups: Object.entries(groups).map(([label, items]) => ({ label, items })),
       weapons: Object.entries(WEAPON_CHOICES).map(([id, label]) => ({ id, label })),
       runes: Object.entries(RUNES).filter(([, r]) => r.family !== "bomb").map(([id, r]) => ({ id, label: r.name })),
@@ -193,6 +207,36 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
     await game.settings.set(MODULE_ID, "strikeOverrides", all);
     await this.render();
     this.#msg("Back to automatic.");
+  }
+
+  static async #onSetWallMaterial() {
+    const docs = (canvas.walls?.controlled ?? []).map((w) => w.document);
+    if (!docs.length) return this.#msg("Select walls on the Walls layer first.", true);
+    const mat = this.#val("[name=wallMat]");
+    await setMaterial(docs, mat);
+    await this.render();
+    this.#msg(`${docs.length} wall(s) are now ${MATERIALS[mat].name}.`);
+  }
+
+  static async #onBreakSelected() {
+    const docs = (canvas.walls?.controlled ?? []).map((w) => w.document).filter((d) => !d.getFlag(MODULE_ID, "broken"));
+    if (!docs.length) return this.#msg("Select walls on the Walls layer first.", true);
+    await breakWalls(docs);
+    await this.render();
+    this.#msg(`${docs.length} wall(s) broken. Restore them here whenever you like.`);
+  }
+
+  static async #onRestoreWalls() {
+    const n = await restoreWalls();
+    await this.render();
+    this.#msg(n ? `${n} wall(s) restored.` : "No broken walls in this scene.");
+  }
+
+  static async #onClearMarks() {
+    await clearScars();
+    this.tabName = "scene";
+    await this.render();
+    this.#msg("Marks cleared.");
   }
 
   static async #onRemoveOverride(event, target) {

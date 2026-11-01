@@ -3,6 +3,55 @@ import { MODULE_ID, CAST_OPTION, CONJURE_ID, debug, report, fail } from "../cons
 import { Director } from "../director.js";
 import { resolveSpell, resolveStrike } from "../resolver.js";
 import { seedFrom } from "../core/util.js";
+import { onDamageRoll, onWallUpdate } from "../walls.js";
+import { addScars, SCAR_ELEMENTS } from "../core/scars.js";
+
+/** Areas that just played, by the item that made them: a later damage roll can break the walls they reached. */
+const recentAreas = new Map();
+function rememberArea(item, plan, shape, caster) {
+  const key = item?.uuid; if (!key) return;
+  recentAreas.set(key, { shape, plan, name: item.name, at: Date.now(), sceneId: canvas.scene?.id });
+  for (const [k, v] of recentAreas) if (Date.now() - v.at > 10 * 60 * 1000) recentAreas.delete(k);
+  leaveMarks(plan, shape, caster).catch(() => {});
+}
+
+/** Lasting scorch, frost or acid burns where an area went off (GM writes them to the scene). */
+async function leaveMarks(plan, shape) {
+  if (!setting("persistentMarks", false) || !game.user.isGM) return;
+  if (game.users?.activeGM && game.users.activeGM !== game.user) return;
+  const el = plan?.element;
+  if (!SCAR_ELEMENTS.has(el)) return;
+  const o = Director.get().overlay, k = o.ppf;
+  const seed = () => Math.floor(Math.random() * 1e6);
+  const marks = [];
+  let originPx, radius;
+  if (shape.type === "circle" || shape.type === "rect") {
+    const c = o.toPx(shape.center), R = (shape.distance ?? shape.side / 2) * k;
+    marks.push({ k: "burn", el, x: c.x, y: c.y, r: R * 0.9, seed: seed() });
+    originPx = c; radius = R * 1.2;
+  } else {
+    const p = o.toPx(shape.origin), dx = Math.cos(shape.angleRad), dy = Math.sin(shape.angleRad), L = shape.distance * k;
+    const steps = Math.max(2, Math.round(shape.distance / 10));
+    for (let i = 1; i <= steps; i++) {
+      const d = L * (i - 0.4) / steps;
+      const r = shape.type === "cone" ? Math.max(k * 4, d * Math.tan((shape.coneRad ?? Math.PI / 2) / 2) * 0.85) : Math.max(k * 3, (shape.width ?? 5) * k * 0.7);
+      marks.push({ k: "burn", el, x: p.x + dx * d, y: p.y + dy * d, r, seed: seed() });
+    }
+    originPx = p; radius = L * 1.1;
+  }
+  // Clip the marks to what the blast reached, so they stop at walls
+  try {
+    const backend = CONFIG?.Canvas?.polygonBackends?.move;
+    const pts = backend?.create(originPx, { type: "move", radius })?.points;
+    if (pts?.length >= 6) {
+      const step = Math.max(1, Math.ceil(pts.length / 2 / 160));
+      const clip = [];
+      for (let i = 0; i < pts.length; i += 2 * step) clip.push(Math.round(pts[i]), Math.round(pts[i + 1]));
+      for (const m of marks) m.clip = clip;
+    }
+  } catch { /* unclipped */ }
+  await addScars(marks);
+}
 
 /*
  * Every client hears the same chat messages and document changes, so each plays the
@@ -124,6 +173,11 @@ async function onChatMessage(message) {
     return;
   }
 
+  // Any damage roll after an area (spell or creature ability): walls it reached may break
+  if (ctx?.type === "damage-roll" && origin?.uuid && recentAreas.has(origin.uuid)) {
+    onDamageRoll(message, recentAreas.get(origin.uuid)).catch((err) => fail("walls", err));
+  }
+
   // Damage roll of a spell that was cast without targets: play it now, at the damage roll's targets
   if (ctx?.type === "damage-roll" && origin?.type === "spell") {
     const key = castKey(message, origin);
@@ -142,6 +196,8 @@ async function onChatMessage(message) {
       playedAreas.add(waiting.messageId);
       report(`Damage: ${waiting.name}`, [`no area was placed: aimed at ${targets.length} target(s)`]);
       director.playTemplate({ item: waiting.item, plan: waiting.plan, caster: waiting.caster, shape, seed });
+      rememberArea(waiting.item, waiting.plan, shape, waiting.caster);
+      onDamageRoll(message, recentAreas.get(waiting.item?.uuid)).catch((err) => fail("walls", err));
       return;
     }
     report(`Damage: ${waiting.name}`, [`plays now at ${targets.length} target(s)`]);
@@ -316,6 +372,7 @@ async function onArea(doc, shape) {
   const caster = found.token;
   report(`Area: ${item.name}`, [...(plan.steps ?? []), `placed ${doc.shapes?.[0]?.type} → ${shape.type}`, `caster: ${caster?.name ?? "—"} (${found.how})`]);
   Director.get().playTemplate({ item, plan, caster, shape, seed: seedFrom(doc.id) });
+  rememberArea(item, plan, shape, caster);
 }
 
 /* -------------------- reveal buttons for the GM -------------------- */
@@ -370,6 +427,14 @@ export function registerTriggers() {
   });
 
   Hooks.on("renderChatMessageHTML", (message, html) => addRevealButtons(message, html));
+
+  // Breakable walls: everyone sees the collapse; lasting marks follow the scene's flags
+  Hooks.on("updateWall", (doc, changes) => { try { onWallUpdate(doc, changes); } catch (err) { fail("wall", err); } });
+  Hooks.on("canvasReady", () => setTimeout(() => Director.get().scars.refresh(), 100));
+  Hooks.on("updateScene", (scene, changes) => {
+    if (scene.id !== canvas.scene?.id || !foundry.utils.hasProperty(changes, `flags.${MODULE_ID}`)) return;
+    Director.get().scars.refresh();
+  });
 
   Hooks.on("createMeasuredTemplate", (doc) => { onArea(doc, shapeFromTemplate(doc)).catch((err) => fail("template", err)); });
   Hooks.on("createRegion", (doc) => {
