@@ -1,0 +1,21 @@
+// Cast glow and aura data ported from the Cast Glow Lab.
+
+export const TRADITIONS = {
+  arcane: { name: "Arcane", style: 0, core: [0.82, 0.9, 1.0], glow: [0.3, 0.5, 1.0], circle: "geometric runic circle" },
+  divine: { name: "Divine", style: 1, core: [1.0, 0.94, 0.75], glow: [1.0, 0.68, 0.22], circle: "radiant halo and rays" },
+  occult: { name: "Occult", style: 2, core: [0.93, 0.8, 1.0], glow: [0.62, 0.3, 0.95], circle: "moon phases around an eye" },
+  primal: { name: "Primal", style: 3, core: [0.88, 1.0, 0.78], glow: [0.35, 0.82, 0.3], circle: "living ring of leaves" },
+};
+
+export const AURAS = {
+  blessed:    { name: "Blessed",    style: 0, layer: "under", tint: "trad",  dot: "#e8c66a", from: "spell effects that help" },
+  hexed:      { name: "Hexed",      style: 1, layer: "over",  tint: "trad",  dot: "#9a5ad8", from: "spell effects that hinder" },
+  quickened:  { name: "Quickened",  style: 2, layer: "under", tint: [1.0, 0.78, 0.3],  dot: "#f2c05a", from: "condition: quickened" },
+  slowed:     { name: "Slowed",     style: 3, layer: "under", tint: [0.55, 0.72, 0.95], dot: "#8fb4e8", from: "condition: slowed", shade: 0.25 },
+  frightened: { name: "Frightened", style: 4, layer: "over",  tint: [0.55, 0.25, 0.8],  dot: "#8a42b8", from: "condition: frightened", tremble: 0.07 },
+  sickened:   { name: "Sickened",   style: 5, layer: "over",  tint: [0.5, 0.7, 0.15],  dot: "#9aa93a", from: "condition: sickened" },
+  burning:    { name: "Burning",    style: 6, layer: "over",  tint: [1.0, 0.5, 0.12],  dot: "#ff8a1c", from: "persistent fire damage" },
+  bleeding:   { name: "Bleeding",   style: 7, layer: "over",  tint: [0.6, 0.03, 0.04], dot: "#c43a3a", from: "persistent bleed damage" },
+  shielded:   { name: "Shielded",   style: 8, layer: "over",  tint: [0.55, 0.6, 1.0],  dot: "#6a5cff", from: "effects like Shield or Mystic Armor" },
+  invisible:  { name: "Invisible",  style: 9, layer: "over",  tint: [0.75, 0.9, 1.0],  dot: "#cfe6ff", from: "condition: invisible (GM view)", alpha: 0.35 },
+};
