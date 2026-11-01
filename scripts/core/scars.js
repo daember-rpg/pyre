@@ -120,7 +120,9 @@ export class ScarLayer {
     const [x1, y1, x2, y2] = sc.c, rnd = mulberry32(sc.seed ?? 1);
     const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L, nx = -uy, ny = ux;
     const size = canvas.dimensions.size;
-    const pal = sc.mat === "wood" ? [[96, 66, 38], [122, 86, 50], [70, 48, 28]] : sc.mat === "metal" ? [[90, 94, 100], [120, 124, 130], [60, 62, 68]] : [[110, 104, 96], [138, 130, 120], [80, 75, 70]];
+    const pal = sc.mat === "wood" && sc.cause === "fire" ? [[34, 26, 20], [58, 42, 30], [22, 17, 13]]
+      : sc.cause === "cold" ? [[170, 190, 205], [210, 225, 235], [130, 150, 165]]
+      : sc.mat === "wood" ? [[96, 66, 38], [122, 86, 50], [70, 48, 28]] : sc.mat === "metal" ? [[90, 94, 100], [120, 124, 130], [60, 62, 68]] : [[110, 104, 96], [138, 130, 120], [80, 75, 70]];
     // Dust band
     g.lineCap = "round";
     // Dust settled around the rubble: soft, uneven patches, not a band

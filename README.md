@@ -42,6 +42,20 @@ World: animate spells, animate strikes, animate posted (not cast) spell cards, a
 
 With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
 
+## Changes in 0.5.2
+
+* Materials react to damage types (world setting *Materials react to damage types*, on by default). Each part of the damage is multiplied before Hardness:
+
+  | Material | Takes more | Takes less |
+  |---|---|---|
+  | Wood | fire ×2, acid and slashing ×1.25 | cold and piercing ÷2 |
+  | Stone | sonic ×2, bludgeoning and acid ×1.5 | fire, cold, electricity, piercing and slashing ÷2 |
+  | Iron / steel | acid ×2, cold ×1.5 | fire, electricity, piercing and slashing ÷2 |
+  | Glass | sonic and bludgeoning ×2, cold ×1.5 | — |
+
+  Force hits every material the same. The confirmation dialog shows why ("fogo ×2").
+* What broke the wall shows on the pieces: wood broken by fire flies off charred with burning edges and leaves charred rubble; frost leaves pale, frozen rubble; acid, lightning, sound and force tint the edges of the flying pieces.
+
 ## Changes in 0.5.1
 
 * New wall break: the wall cracks with a flash, then chunks (and a few big slabs) fly out, mostly away from the blast, tumble and land as rubble in a cloud of dust; the rubble left on the floor lies on that same side.

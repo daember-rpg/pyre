@@ -6,6 +6,15 @@ import { MODULE_ID } from "../constants.js";
 
 function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
 const QK = { low: 0.5, medium: 0.8, high: 1 };
+/** What broke the wall tints its pieces: [edge glow colour, glow strength, palette override] */
+const CAUSE = {
+  fire: { hot: [1.0, 0.45, 0.1], k: 1.6, wood: { a: [0.07, 0.05, 0.04], b: [0.28, 0.2, 0.14], dust: [0.25, 0.22, 0.2] } },
+  acid: { hot: [0.5, 1.0, 0.15], k: 0.9 },
+  electricity: { hot: [0.55, 0.7, 1.0], k: 1.2 },
+  cold: { hot: [0.75, 0.92, 1.0], k: 0.8, all: { a: [0.45, 0.55, 0.62], b: [0.85, 0.94, 1.0], dust: [0.75, 0.85, 0.92] } },
+  sonic: { hot: [1.0, 0.95, 0.85], k: 0.5 },
+  force: { hot: [0.75, 0.6, 1.0], k: 0.9 },
+};
 const PAL = {
   stone: { a: [0.2, 0.19, 0.17], b: [0.58, 0.55, 0.5], dust: [0.5, 0.46, 0.4] },
   wood:  { a: [0.2, 0.12, 0.06], b: [0.6, 0.42, 0.24], dust: [0.45, 0.36, 0.26] },
@@ -26,11 +35,12 @@ export class WallEffect {
     this.clock = 0; this.hitstop = 0;
     this.dur = req.rebuild ? 1.5 : 2.8;
     const len = req.a.distanceTo(req.b);
-    const pal = PAL[req.material] ?? PAL.stone, q = QK[setting("quality", "high")] ?? 1;
+    const C = CAUSE[req.cause] ?? null;
+    const pal = (C && (C[req.material] ?? C.all)) ?? PAL[req.material] ?? PAL.stone, q = QK[setting("quality", "high")] ?? 1;
     const U = (mode) => ({ uA: { value: req.a.clone() }, uB: { value: req.b.clone() }, uT: { value: 0 }, uSide: { value: req.side ?? 0 }, uMode: { value: mode },
       uRev: { value: req.rebuild ? 1 : 0 }, uSize: { value: req.material === "wood" ? 1.1 : 1.25 }, uFade: { value: 1 }, uNoise: { value: overlay.noise },
       uWood: { value: req.material === "wood" ? 1 : 0 }, uPalA: { value: new THREE.Vector3(...pal.a) }, uPalB: { value: new THREE.Vector3(...pal.b) },
-      uDust: { value: new THREE.Vector3(...pal.dust) } });
+      uDust: { value: new THREE.Vector3(...pal.dust) }, uHot: { value: C ? C.k : 0 }, uHotCol: { value: new THREE.Vector3(...(C?.hot ?? [0, 0, 0])) } });
     this.chunks = particles(this.group, { max: 1200, seed: 91, vs: GL.WALL_VS, fs: GL.WALL_FS, uniforms: U(0), blend: "premult", order: 3 });
     this.dust = particles(this.under, { max: 500, seed: 92, vs: GL.WALL_VS, fs: GL.WALL_FS, uniforms: U(1), blend: "premult", order: 1 });
     this.chunks.geo.instanceCount = Math.min(1200, Math.round(len * 9 * q) + 10);

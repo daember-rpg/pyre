@@ -952,8 +952,8 @@ void main(){
 
 export const WALL_FS = `
 uniform sampler2D uNoise;
-uniform float uMode, uWood;
-uniform vec3 uPalA, uPalB, uDust;
+uniform float uMode, uWood, uHot;
+uniform vec3 uPalA, uPalB, uDust, uHotCol;
 varying vec2 vUv; varying vec4 vSeed; varying float vAlpha; varying float vHop; varying float vT;
 void main(){
   vec2 p = vUv*2.0 - 1.0;
@@ -980,7 +980,10 @@ void main(){
   float grain = texture2D(uNoise, vUv*1.7 + vSeed.zw*3.0).r;
   vec3 col = mix(uPalA, uPalB, clamp(lit*0.8 + grain*0.35 - 0.1, 0.0, 1.0))*(1.0 - 0.35*smoothstep(edge - 0.18, edge, r));
   float a = clamp((body + shadow)*vAlpha, 0.0, 1.0);
-  vec3 c = col*body + vec3(0.0)*shadow;
+  // What broke it shows on the pieces: burning edges, corrosion, frost or crackling sparks, fading as they settle
+  float rim = smoothstep(edge - 0.32, edge - 0.02, r)*body;
+  vec3 hot = uHotCol*uHot*(rim*(0.6 + 0.8*grain))*(1.0 - 0.8*vT);
+  vec3 c = col*body + hot;
   gl_FragColor = vec4(c*vAlpha, a);
 }`;
 

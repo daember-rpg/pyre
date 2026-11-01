@@ -2,7 +2,7 @@
   "id": "pyre",
   "title": "Pyre",
   "description": "Lightweight procedural spell, strike and condition effects for Pathfinder 2e, rendered live on the GPU. No video files.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "authors": [
     {
       "name": "Fernando"

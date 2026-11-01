@@ -22,6 +22,20 @@ export const MATERIALS = {
 /** Damage types that do nothing to objects. */
 const NO_EFFECT = new Set(["mental", "spirit", "poison", "vitality", "void", "bleed"]);
 
+/**
+ * How each material takes each kind of damage (multiplier on that part of the damage, before Hardness).
+ * Wood burns; stone cracks under sound and hammering, shrugs off fire and frost; metal corrodes and grows brittle in the cold;
+ * glass shatters. Force hits everything the same.
+ */
+export const WEAKNESS = {
+  wood:  { fire: 2, acid: 1.25, slashing: 1.25, cold: 0.5, piercing: 0.5 },
+  stone: { sonic: 2, bludgeoning: 1.5, acid: 1.5, fire: 0.5, cold: 0.5, electricity: 0.5, piercing: 0.5, slashing: 0.5 },
+  metal: { acid: 2, cold: 1.5, electricity: 0.5, fire: 0.5, piercing: 0.5, slashing: 0.5 },
+  glass: { sonic: 2, bludgeoning: 2, cold: 1.5 },
+};
+const TYPE_PT = { fire: "fogo", cold: "frio", acid: "ácido", electricity: "eletricidade", sonic: "sônico", force: "força", bludgeoning: "concussão",
+  piercing: "perfuração", slashing: "corte", untyped: "dano" };
+
 export function wallMaterial(doc) {
   const m = doc?.getFlag?.(MODULE_ID, "material") ?? doc?.flags?.[MODULE_ID]?.material;
   return MATERIALS[m] ? m : setting("defaultWallMaterial", "stone");
@@ -88,19 +102,37 @@ export function wallsReached(shape) {
 
 /** Total and damage types of a PF2e damage roll. */
 function readDamage(message) {
-  let total = 0; const types = new Set();
+  let total = 0; const byType = {};
   for (const r of message.rolls ?? []) {
-    total += Number(r.total) || 0;
-    for (const inst of r.instances ?? []) if (inst.type) types.add(inst.type);
+    const t = Number(r.total) || 0;
+    total += t;
+    const inst = (r.instances ?? []).filter((i) => i.type);
+    if (!inst.length) { byType.untyped = (byType.untyped ?? 0) + t; continue; }
+    // Split the roll by its damage instances (their own totals when PF2e gives them, otherwise evenly)
+    const sum = inst.reduce((a, i) => a + (Number(i.total) || 0), 0);
+    for (const i of inst) byType[i.type] = (byType[i.type] ?? 0) + (sum > 0 ? Number(i.total) || 0 : t / inst.length);
   }
-  return { total, types: [...types] };
+  return { total, byType, types: Object.keys(byType) };
+}
+
+/** Damage a wall of this material really takes, before Hardness, and the reasons (for the dialog). */
+function effective(byType, mat) {
+  const W = setting("wallWeakness", true) ? (WEAKNESS[mat] ?? {}) : {};
+  let dmg = 0; const notes = [];
+  for (const [type, amount] of Object.entries(byType)) {
+    if (NO_EFFECT.has(type)) continue;
+    const k = W[type] ?? 1;
+    dmg += amount * k;
+    if (k !== 1) notes.push(`${TYPE_PT[type] ?? type} ${k > 1 ? "×" + k : "÷" + Math.round(1 / k)}`);
+  }
+  return { dmg: Math.floor(dmg), notes };
 }
 
 export async function onDamageRoll(message, area) {
   if (!setting("breakableWalls", false) || !game.user.isGM) return;
   if (game.users?.activeGM && game.users.activeGM !== game.user) return;     // one GM decides
   if (!area?.shape || area.sceneId !== canvas.scene?.id) return;
-  const { total, types } = readDamage(message);
+  const { total, types, byType } = readDamage(message);
   if (!total) return;
   const useful = types.length ? types.filter((t) => !NO_EFFECT.has(t)) : ["untyped"];
   if (!useful.length) return report("Walls", ["this damage does not harm objects"]);
@@ -108,23 +140,24 @@ export async function onDamageRoll(message, area) {
   if (!reached.length) return;
   const rows = reached.map((d) => {
     const mat = wallMaterial(d), M = MATERIALS[mat], hp = wallHP(d);
-    const dealt = Math.max(0, total - M.hardness);
-    return { d, mat, M, hp, dealt, left: hp - dealt, breaks: Number.isFinite(hp) && hp - dealt <= 0 };
+    const eff = effective(byType, mat);
+    const dealt = Math.max(0, eff.dmg - M.hardness);
+    return { d, mat, M, hp, eff, dealt, left: hp - dealt, breaks: Number.isFinite(hp) && hp - dealt <= 0 };
   }).filter((r) => r.dealt > 0 && Number.isFinite(r.hp));
-  report("Walls", [`${total} damage reaches ${reached.length} wall(s)`, ...rows.map((r) => `${r.M.name}: ${r.dealt} after Hardness ${r.M.hardness} → ${Math.max(0, r.left)}/${r.M.hp}`)]);
+  report("Walls", [`${total} damage reaches ${reached.length} wall(s)`, ...rows.map((r) => `${r.M.name}: ${r.eff.dmg}${r.eff.notes.length ? " (" + r.eff.notes.join(", ") + ")" : ""} − Hardness ${r.M.hardness} = ${r.dealt} → ${Math.max(0, r.left)}/${r.M.hp}`)]);
   if (!rows.length) return;
   const chosen = await confirmDialog(area.name ?? "A explosão", total, rows);
   if (!chosen) return;
   const toBreak = rows.filter((r, i) => chosen.has(i));
   const damaged = rows.filter((r, i) => !chosen.has(i));
   for (const r of damaged) await r.d.setFlag(MODULE_ID, "hp", Math.max(1, r.left));
-  if (toBreak.length) await breakWalls(toBreak.map((r) => r.d), area.originPx ?? null);
+  if (toBreak.length) await breakWalls(toBreak.map((r) => r.d), area.originPx ?? null, Object.keys(byType).sort((a, b) => byType[b] - byType[a])[0]);
 }
 
 async function confirmDialog(name, total, rows) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const list = rows.map((r, i) => `<label class="pyre-wall-row"><input type="checkbox" name="w${i}" ${r.breaks ? "checked" : ""}>
-    <span><b>${esc(r.M.name)}</b> · ${r.dealt} de dano (Dureza ${r.M.hardness}) · ${r.breaks ? "<em>rompe</em>" : `fica com ${Math.max(1, r.left)}/${r.M.hp} PV`}</span></label>`).join("");
+    <span><b>${esc(r.M.name)}</b> · ${r.eff.notes.length ? `<i>${esc(r.eff.notes.join(", "))}</i> · ` : ""}${r.dealt} de dano (Dureza ${r.M.hardness}) · ${r.breaks ? "<em>rompe</em>" : `fica com ${Math.max(1, r.left)}/${r.M.hp} PV`}</span></label>`).join("");
   const content = `<p>${esc(name)} causou <b>${total}</b> de dano. Marque as paredes que se quebram:</p><div class="pyre-wall-list">${list}</div>
     <p class="hint">Desmarcadas guardam o dano. Paredes quebradas podem ser restauradas no Pyre Studio.</p>`;
   const DialogV2 = foundry.applications?.api?.DialogV2;
@@ -145,14 +178,14 @@ async function confirmDialog(name, total, rows) {
 }
 
 /** Break walls: they stop blocking, a collapse plays for everyone, rubble is left on the floor. */
-export async function breakWalls(docs, fromPx = null) {
+export async function breakWalls(docs, fromPx = null, cause = null) {
   const updates = docs.map((d) => ({
     _id: d.id, move: 0, sight: 0, light: 0, sound: 0,
-    [`flags.${MODULE_ID}.broken`]: { move: d.move, sight: d.sight, light: d.light, sound: d.sound, at: Date.now(), from: fromPx },
+    [`flags.${MODULE_ID}.broken`]: { move: d.move, sight: d.sight, light: d.light, sound: d.sound, at: Date.now(), from: fromPx, cause },
   }));
   await canvas.scene.updateEmbeddedDocuments("Wall", updates);
   // The rubble lands on the far side from the blast, like the flying chunks
-  await addScars(docs.map((d) => ({ k: "rubble", c: [...d.c], mat: wallMaterial(d), side: sideOf(d.c, fromPx), seed: Math.floor(Math.random() * 1e6) })));
+  await addScars(docs.map((d) => ({ k: "rubble", c: [...d.c], mat: wallMaterial(d), side: sideOf(d.c, fromPx), cause, seed: Math.floor(Math.random() * 1e6) })));
   postRestoreCard(docs);
 }
 
@@ -180,7 +213,7 @@ async function postRestoreCard(docs) {
 export function onWallUpdate(doc, changes) {
   const f = changes?.flags?.[MODULE_ID];
   if (!f || doc.parent?.id !== canvas.scene?.id) return;
-  if (f.broken) Director.get().playCollapse(doc.c, wallMaterial(doc), f.broken.from ?? null);
+  if (f.broken) Director.get().playCollapse(doc.c, wallMaterial(doc), f.broken.from ?? null, f.broken.cause ?? null);
   else if (f.restored || "-=broken" in f) Director.get().playRebuild(doc.c, wallMaterial(doc));
 }
 
