@@ -1,15 +1,15 @@
 <section class="ps-root">
   <nav class="ps-tabs">
-    <button type="button" data-action="pyreTab" data-tab="test" class="{{#if (eq tab "test")}}active{{/if}}"><i class="fa-solid fa-wand-sparkles"></i> Test on the map</button>
-    <button type="button" data-action="pyreTab" data-tab="overrides" class="{{#if (eq tab "overrides")}}active{{/if}}"><i class="fa-solid fa-sliders"></i> Overrides</button>
-    <button type="button" data-action="pyreTab" data-tab="scene" class="{{#if (eq tab "scene")}}active{{/if}}"><i class="fa-solid fa-dungeon"></i> Scene</button>
+    <button type="button" data-action="pyreTab" data-tab="test" class="{{#if (eq tab "test")}}active{{/if}}"><i class="fa-solid fa-wand-sparkles"></i> {{localize "PYRE.Studio.Btn.TestOnTheMap"}}</button>
+    <button type="button" data-action="pyreTab" data-tab="overrides" class="{{#if (eq tab "overrides")}}active{{/if}}"><i class="fa-solid fa-sliders"></i> {{localize "PYRE.Studio.Btn.Overrides"}}</button>
+    <button type="button" data-action="pyreTab" data-tab="scene" class="{{#if (eq tab "scene")}}active{{/if}}"><i class="fa-solid fa-dungeon"></i> {{localize "PYRE.Studio.Btn.Scene"}}</button>
   </nav>
   <div class="ps-scroll">
     {{#if (eq tab "test")}}
-    <p class="ps-hint">Select the token that acts, then target others with <kbd>T</kbd>. Tests play only on your screen.</p>
+    <p class="ps-hint">{{{localize "PYRE.Studio.Test.Hint"}}}</p>
 
     <fieldset class="ps-card">
-      <legend>Spell effects</legend>
+      <legend>{{localize "PYRE.Studio.Test.Spells"}}</legend>
       <div class="ps-row">
         <select name="preset">
           {{#each presetGroups}}
@@ -18,64 +18,65 @@
           </optgroup>
           {{/each}}
         </select>
-        <button type="button" class="ps-play" data-action="playPreset"><i class="fa-solid fa-play"></i> Play</button>
+        <button type="button" class="ps-play" data-action="playPreset"><i class="fa-solid fa-play"></i> {{localize "PYRE.Studio.Btn.Play"}}</button>
       </div>
-      <p class="ps-note">Areas aim at your first target, or straight ahead without one.</p>
+      <p class="ps-note">{{localize "PYRE.Studio.Test.SpellsNote"}}</p>
     </fieldset>
 
     <fieldset class="ps-card">
-      <legend>Strikes</legend>
+      <legend>{{localize "PYRE.Studio.Test.Strikes"}}</legend>
       <div class="ps-grid">
-        <label>Weapon<select name="weapon">{{#each weapons}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Bomb<select name="bomb">{{#each bombs}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Rune<select name="rune1"><option value="none">None</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Second rune<select name="rune2"><option value="none">None</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Potency<select name="potency"><option value="0">+0</option><option value="1" selected>+1</option><option value="2">+2</option><option value="3">+3</option></select></label>
-        <label>Striking<select name="striking"><option value="0">None</option><option value="1" selected>Striking</option><option value="2">Greater</option><option value="3">Major</option></select></label>
-        <label>Result<select name="outcome"><option value="hit">Hit</option><option value="crit">Critical</option><option value="miss">Miss</option><option value="hidden">Hidden (player view)</option></select></label>
+        <label>{{localize "PYRE.Studio.Field.Weapon"}}<select name="weapon">{{#each weapons}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.Bomb"}}<select name="bomb">{{#each bombs}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.Rune"}}<select name="rune1"><option value="none">{{localize "PYRE.Studio.Opt.None"}}</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.SecondRune"}}<select name="rune2"><option value="none">{{localize "PYRE.Studio.Opt.None"}}</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.Potency"}}<select name="potency"><option value="0">+0</option><option value="1" selected>+1</option><option value="2">+2</option><option value="3">+3</option></select></label>
+        <label>{{localize "PYRE.Studio.Field.Striking"}}<select name="striking"><option value="0">{{localize "PYRE.Studio.Opt.None"}}</option><option value="1" selected>{{localize "PYRE.Studio.Opt.Striking"}}</option><option value="2">{{localize "PYRE.Studio.Opt.Greater"}}</option><option value="3">{{localize "PYRE.Studio.Opt.Major"}}</option></select></label>
+        <label>{{localize "PYRE.Studio.Field.Result"}}<select name="outcome"><option value="hit">{{localize "PYRE.Studio.Opt.Hit"}}</option><option value="crit">{{localize "PYRE.Studio.Opt.Critical"}}</option><option value="miss">{{localize "PYRE.Studio.Opt.Miss"}}</option><option value="hidden">{{localize "PYRE.Studio.Opt.HiddenPlayerView"}}</option></select></label>
         <div class="ps-checks">
-          <label class="ps-check"><input type="checkbox" name="greater"> Greater runes</label>
-          <label class="ps-check"><input type="checkbox" name="flurry"> Flurry (unarmed)</label>
+          <label class="ps-check"><input type="checkbox" name="greater"> {{localize "PYRE.Studio.Check.GreaterRunes"}}</label>
+          <label class="ps-check"><input type="checkbox" name="flurry"> {{localize "PYRE.Studio.Check.FlurryUnarmed"}}</label>
         </div>
       </div>
-      <div class="ps-row end"><button type="button" class="ps-play" data-action="playStrike"><i class="fa-solid fa-play"></i> Strike</button></div>
+      <div class="ps-row end"><button type="button" class="ps-play" data-action="playStrike"><i class="fa-solid fa-play"></i> {{localize "PYRE.Studio.Btn.Strike"}}</button></div>
     </fieldset>
 
     <fieldset class="ps-card">
-      <legend>Cast glow</legend>
+      <legend>{{localize "PYRE.Studio.Test.Glow"}}</legend>
       <div class="ps-grid">
-        <label>Tradition<select name="tradition">{{#each traditions}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Intent<select name="intent">
-          <option value="auto">Auto (by target's side)</option><option value="buff">Blessing</option><option value="debuff">Hex</option>
-          <option value="self">Self</option><option value="teleport">Teleport</option>
+        <label>{{localize "PYRE.Studio.Field.Tradition"}}<select name="tradition">{{#each traditions}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.Intent"}}<select name="intent">
+          <option value="auto">{{localize "PYRE.Studio.Opt.AutoByTargetSSide"}}</option><option value="buff">{{localize "PYRE.Studio.Opt.Blessing"}}</option><option value="debuff">{{localize "PYRE.Studio.Opt.Hex"}}</option>
+          <option value="self">{{localize "PYRE.Studio.Opt.Self"}}</option><option value="teleport">{{localize "PYRE.Studio.Opt.Teleport"}}</option>
         </select></label>
       </div>
-      <div class="ps-row end"><button type="button" class="ps-play" data-action="playGlow"><i class="fa-solid fa-play"></i> Cast</button></div>
+      <div class="ps-row end"><button type="button" class="ps-play" data-action="playGlow"><i class="fa-solid fa-play"></i> {{localize "PYRE.Studio.Btn.Cast"}}</button></div>
     </fieldset>
-    {{else}}
-    <p class="ps-hint">Pyre reads each spell's data on its own. Use an override when a spell should look different: an enemy's black lightning, an ice fireball, or no animation at all.</p>
+    {{/if}}
+    {{#if (eq tab "overrides")}}
+    <p class="ps-hint">{{localize "PYRE.Studio.Ov.Hint"}}</p>
 
     <fieldset class="ps-card">
-      <legend>Add or change an override</legend>
-      <label class="ps-wide">Spell<input type="text" name="ovSpell" list="pyre-spell-names" placeholder="Start typing a spell name" autocomplete="off"></label>
+      <legend>{{localize "PYRE.Studio.Ov.Add"}}</legend>
+      <label class="ps-wide">{{localize "PYRE.Studio.Field.Spell"}}<input type="text" name="ovSpell" list="pyre-spell-names" placeholder="{{localize 'PYRE.Studio.Attr.StartTypingASpellName'}}" autocomplete="off"></label>
       <datalist id="pyre-spell-names">{{#each spellNames}}<option value="{{this}}"></option>{{/each}}</datalist>
       <div class="ps-grid">
-        <label>Delivery<select name="ovRecipe"><option value="">Automatic</option>{{#each recipes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Element<select name="ovElement"><option value="">Automatic</option>{{#each elements}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Material<select name="ovMaterial"><option value="">Automatic</option><option value="stone">Stone</option><option value="metal">Metal</option><option value="wood">Wood</option></select></label>
+        <label>{{localize "PYRE.Studio.Field.Delivery"}}<select name="ovRecipe"><option value="">{{localize "PYRE.Studio.Opt.Automatic"}}</option>{{#each recipes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.Element"}}<select name="ovElement"><option value="">{{localize "PYRE.Studio.Opt.Automatic"}}</option>{{#each elements}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.Material"}}<select name="ovMaterial"><option value="">{{localize "PYRE.Studio.Opt.Automatic"}}</option><option value="stone">{{localize "PYRE.Studio.Opt.Stone"}}</option><option value="metal">{{localize "PYRE.Studio.Opt.Metal"}}</option><option value="wood">{{localize "PYRE.Studio.Opt.Wood"}}</option></select></label>
         <div class="ps-checks">
-          <label class="ps-check"><input type="checkbox" name="ovColor"> Custom colours</label>
-          <label class="ps-check"><input type="checkbox" name="ovOff"> No animation</label>
+          <label class="ps-check"><input type="checkbox" name="ovColor"> {{localize "PYRE.Studio.Check.CustomColours"}}</label>
+          <label class="ps-check"><input type="checkbox" name="ovOff"> {{localize "PYRE.Studio.Check.NoAnimation"}}</label>
         </div>
-        <label>Core<input type="color" name="ovCore" value="#07040b"></label>
-        <label>Glow<input type="color" name="ovGlow" value="#9b4dff"></label>
+        <label>{{localize "PYRE.Studio.Field.Core"}}<input type="color" name="ovCore" value="#07040b"></label>
+        <label>{{localize "PYRE.Studio.Field.Glow"}}<input type="color" name="ovGlow" value="#9b4dff"></label>
       </div>
-      <p class="ps-note">A very dark core switches to shadow rendering, with the glow on the rim.</p>
-      <div class="ps-row end"><button type="button" class="ps-play" data-action="saveOverride"><i class="fa-solid fa-floppy-disk"></i> Save override</button></div>
+      <p class="ps-note">{{localize "PYRE.Studio.Ov.DarkNote"}}</p>
+      <div class="ps-row end"><button type="button" class="ps-play" data-action="saveOverride"><i class="fa-solid fa-floppy-disk"></i> {{localize "PYRE.Studio.Btn.SaveOverride"}}</button></div>
     </fieldset>
 
     <fieldset class="ps-card">
-      <legend>Current overrides</legend>
+      <legend>{{localize "PYRE.Studio.Ov.Current"}}</legend>
       {{#if overrides.length}}
       <ul class="ps-list">
         {{#each overrides}}
@@ -83,32 +84,32 @@
           <span class="ps-name">{{name}}</span>
           {{#if swatch}}<span class="ps-sw" style="background: {{swatch}}"></span>{{/if}}
           <span class="ps-sum">{{summary}}</span>
-          <button type="button" class="ps-remove" data-action="removeOverride" data-slug="{{slug}}" title="Use automatic"><i class="fa-solid fa-xmark"></i></button>
+          <button type="button" class="ps-remove" data-action="removeOverride" data-slug="{{slug}}" title="{{localize 'PYRE.Studio.Attr.UseAutomatic'}}"><i class="fa-solid fa-xmark"></i></button>
         </li>
         {{/each}}
       </ul>
       {{else}}
-      <p class="ps-note">No overrides yet. Every spell plays what its data describes.</p>
+      <p class="ps-note">{{localize "PYRE.Studio.Ov.None"}}</p>
       {{/if}}
     </fieldset>
 
     <fieldset class="ps-card">
-      <legend>Attacks</legend>
-      <p class="ps-note">Pyre reads the weapon group, then the attack's name (Claw, Jaws, Longsword, Garra…). Pick a look for any attack it gets wrong. Applies to every attack with that name.</p>
-      <label class="ps-wide">Attack<input type="text" name="soName" list="pyre-attack-names" placeholder="Start typing an attack name" autocomplete="off"></label>
+      <legend>{{localize "PYRE.Studio.Ov.Attacks"}}</legend>
+      <p class="ps-note">{{localize "PYRE.Studio.Ov.AttacksHint"}}</p>
+      <label class="ps-wide">{{localize "PYRE.Studio.Field.Attack"}}<input type="text" name="soName" list="pyre-attack-names" placeholder="{{localize 'PYRE.Studio.Attr.StartTypingAnAttackName'}}" autocomplete="off"></label>
       <datalist id="pyre-attack-names">{{#each attackNames}}<option value="{{this}}"></option>{{/each}}</datalist>
       <div class="ps-grid">
-        <label>Looks like<select name="soWeapon">{{#each weapons}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
-        <label>Extra rune<select name="soRune"><option value="none">From the item</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.LooksLike"}}<select name="soWeapon">{{#each weapons}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
+        <label>{{localize "PYRE.Studio.Field.ExtraRune"}}<select name="soRune"><option value="none">{{localize "PYRE.Studio.Opt.FromTheItem"}}</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
       </div>
-      <div class="ps-row end"><button type="button" class="ps-play" data-action="saveStrikeOverride"><i class="fa-solid fa-floppy-disk"></i> Save</button></div>
+      <div class="ps-row end"><button type="button" class="ps-play" data-action="saveStrikeOverride"><i class="fa-solid fa-floppy-disk"></i> {{localize "PYRE.Studio.Btn.Save"}}</button></div>
       {{#if strikeOverrides.length}}
       <ul class="ps-list">
         {{#each strikeOverrides}}
         <li>
           <span class="ps-name">{{name}}</span>
           <span class="ps-sum">{{summary}}</span>
-          <button type="button" class="ps-remove" data-action="removeStrikeOverride" data-key="{{key}}" title="Use automatic"><i class="fa-solid fa-xmark"></i></button>
+          <button type="button" class="ps-remove" data-action="removeStrikeOverride" data-key="{{key}}" title="{{localize 'PYRE.Studio.Attr.UseAutomatic'}}"><i class="fa-solid fa-xmark"></i></button>
         </li>
         {{/each}}
       </ul>
@@ -117,26 +118,26 @@
     {{/if}}
     {{#if (eq tab "scene")}}
     <fieldset class="ps-card">
-      <legend>Breakable walls</legend>
-      <p class="ps-note">{{#if wallsOn}}On.{{else}}Off: turn on <b>Breakable walls</b> in the module settings.{{/if}} After an area's damage roll, walls it reaches take the damage minus their Hardness, and you choose which break. </p>
+      <legend>{{localize "PYRE.Studio.Scene.Walls"}}</legend>
+      <p class="ps-note">{{#if wallsOn}}{{localize "PYRE.Studio.Scene.WallsOn"}}{{else}}{{{localize "PYRE.Studio.Scene.WallsOff"}}}{{/if}} {{localize "PYRE.Studio.Scene.WallsHow"}}</p>
       <div class="ps-grid">
-        <label>This scene's default material<select name="sceneMat">{{#each materials}}<option value="{{id}}" {{#if (eq id ../sceneMat)}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
-        <label class="ps-check"><input type="checkbox" name="weakness" {{#if weaknessOn}}checked{{/if}}> Materials react to damage types (wood ×2 vs fire, stone ×2 vs sonic…)</label>
+        <label>{{localize "PYRE.Studio.Field.ThisSceneSDefaultMaterial"}}<select name="sceneMat">{{#each materials}}<option value="{{id}}" {{#if (eq id ../sceneMat)}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label class="ps-check"><input type="checkbox" name="weakness" {{#if weaknessOn}}checked{{/if}}> {{localize "PYRE.Studio.Scene.Weakness"}}</label>
       </div>
-      <p class="ps-note">Each wall's material, Hardness and HP: double-click the wall (its sheet has a Pyre section, with "apply to the selected walls"). Or select walls here and give them a material. <b>{{selectedWalls}}</b> selected.</p>
+      <p class="ps-note">{{localize "PYRE.Studio.Scene.PerWall"}} {{{localize "PYRE.Studio.Scene.Selected" n=selectedWalls}}}</p>
       <div class="ps-row">
         <select name="wallMat">{{#each materials}}<option value="{{id}}">{{label}}</option>{{/each}}</select>
-        <button type="button" class="ps-play" data-action="setWallMaterial"><i class="fa-solid fa-trowel-bricks"></i> Set material</button>
+        <button type="button" class="ps-play" data-action="setWallMaterial"><i class="fa-solid fa-trowel-bricks"></i> {{localize "PYRE.Studio.Btn.SetMaterial"}}</button>
       </div>
       <div class="ps-row">
-        <button type="button" class="ps-play" data-action="breakSelected"><i class="fa-solid fa-hammer"></i> Break selected</button>
-        <button type="button" class="ps-play" data-action="restoreWalls" {{#unless brokenWalls}}disabled{{/unless}}><i class="fa-solid fa-rotate-left"></i> Restore broken walls ({{brokenWalls}})</button>
+        <button type="button" class="ps-play" data-action="breakSelected"><i class="fa-solid fa-hammer"></i> {{localize "PYRE.Studio.Btn.BreakSelected"}}</button>
+        <button type="button" class="ps-play" data-action="restoreWalls" {{#unless brokenWalls}}disabled{{/unless}}><i class="fa-solid fa-rotate-left"></i> {{localize "PYRE.Studio.Btn.RestoreBrokenWalls" n=brokenWalls}}</button>
       </div>
     </fieldset>
     <fieldset class="ps-card">
-      <legend>Lasting marks</legend>
-      <p class="ps-note">{{#if marksOn}}On: area spells leave scorch, frost and acid burns.{{else}}Off: turn on <b>Lasting marks</b> in the module settings to keep scorch, frost and acid burns.{{/if}} Rubble from broken walls is always kept. This scene has <b>{{marks}}</b> mark(s).</p>
-      <div class="ps-row"><button type="button" class="ps-play" data-action="clearMarks" {{#unless marks}}disabled{{/unless}}><i class="fa-solid fa-broom"></i> Clear this scene's marks</button></div>
+      <legend>{{localize "PYRE.Studio.Scene.Marks"}}</legend>
+      <p class="ps-note">{{#if marksOn}}{{localize "PYRE.Studio.Scene.MarksOn"}}{{else}}{{{localize "PYRE.Studio.Scene.MarksOff"}}}{{/if}} {{localize "PYRE.Studio.Scene.RubbleKept"}} {{{localize "PYRE.Studio.Scene.MarkCount" n=marks}}}</p>
+      <div class="ps-row"><button type="button" class="ps-play" data-action="clearMarks" {{#unless marks}}disabled{{/unless}}><i class="fa-solid fa-broom"></i> {{localize "PYRE.Studio.Btn.ClearThisSceneSMarks"}}</button></div>
     </fieldset>
     {{/if}}
     <p class="ps-msg" role="status"></p>

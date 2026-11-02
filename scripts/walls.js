@@ -1,6 +1,7 @@
 import { MODULE_ID, report } from "./constants.js";
 import { Director } from "./director.js";
 import { addScars } from "./core/scars.js";
+import { t, tn } from "./i18n.js";
 
 /*
  * Breakable walls (optional, GM only).
@@ -50,7 +51,11 @@ export function wallKind(doc) {
   const was = flag(doc, "broken")?.kind;
   return was ?? "wall";
 }
-const KIND_NAME = { wall: "Wall", door: "Door", window: "Window" };
+const kindName = (k) => t(`Kind.${k}`, null, { wall: "Wall", door: "Door", window: "Window" }[k] ?? k);
+/** A material's display name, from the language file. */
+export const materialName = (id) => t(`Material.${id}`, null, MATERIALS[id]?.name ?? id);
+/** "Stone (Hardness 14, 56 HP)", or just the name for unbreakable. */
+export const materialLabel = (id) => { const m = MATERIALS[id]; return Number.isFinite(m?.hp) ? t("Walls.MaterialStats", { name: materialName(id), hardness: m.hardness, hp: m.hp }) : materialName(id); };
 
 export function wallMaterial(doc) {
   const m = flag(doc, "material");
@@ -68,7 +73,7 @@ export function wallStats(doc) {
   const hardness = own("hardness") ?? M.hardness;
   const maxHp = own("maxHp") ?? M.hp;
   const hp = Math.min(own("hp") ?? maxHp, maxHp);
-  return { mat, M, name: M.name, hardness, maxHp, hp, unbreakable: !Number.isFinite(hardness) || !Number.isFinite(maxHp), custom: own("hardness") !== null || own("maxHp") !== null };
+  return { mat, M, name: materialName(mat), hardness, maxHp, hp, unbreakable: !Number.isFinite(hardness) || !Number.isFinite(maxHp), custom: own("hardness") !== null || own("maxHp") !== null };
 }
 export function wallHP(doc) { return wallStats(doc).hp; }
 const isBroken = (doc) => !!(doc?.getFlag?.(MODULE_ID, "broken") ?? doc?.flags?.[MODULE_ID]?.broken);
@@ -149,7 +154,7 @@ function effective(byType, mat) {
     if (NO_EFFECT.has(type)) continue;
     const k = W[type] ?? 1;
     dmg += amount * k;
-    if (k !== 1) notes.push(`${TYPE_NAMES[type] ?? type} ${k > 1 ? "×" + k : "÷" + Math.round(1 / k)}`);
+    if (k !== 1) notes.push(`${t(`Damage.${type}`, null, TYPE_NAMES[type] ?? type)} ${k > 1 ? "×" + k : "÷" + Math.round(1 / k)}`);
   }
   return { dmg: Math.floor(dmg), notes };
 }
@@ -168,12 +173,12 @@ export async function onDamageRoll(message, area) {
     const S = wallStats(d), mat = S.mat;
     const eff = effective(byType, mat);
     const dealt = Math.max(0, eff.dmg - S.hardness);
-    const M = { name: `${KIND_NAME[wallKind(d)]} · ${S.name}`, hardness: S.hardness, hp: S.maxHp };
+    const M = { name: `${kindName(wallKind(d))} · ${S.name}`, hardness: S.hardness, hp: S.maxHp };
     return { d, mat, M, hp: S.hp, eff, dealt, left: S.hp - dealt, breaks: !S.unbreakable && S.hp - dealt <= 0 };
   }).filter((r) => r.dealt > 0 && Number.isFinite(r.hp));
   report("Walls", [`${total} damage reaches ${reached.length} wall(s)`, ...rows.map((r) => `${r.M.name}: ${r.eff.dmg}${r.eff.notes.length ? " (" + r.eff.notes.join(", ") + ")" : ""} − Hardness ${r.M.hardness} = ${r.dealt} → ${Math.max(0, r.left)}/${r.M.hp}`)]);
   if (!rows.length) return;
-  const chosen = await confirmDialog(area.name ?? "The blast", total, rows);
+  const chosen = await confirmDialog(area.name ?? t("Walls.TheBlast"), total, rows);
   if (!chosen) return;
   const toBreak = rows.filter((r, i) => chosen.has(i));
   const damaged = rows.filter((r, i) => !chosen.has(i));
@@ -184,19 +189,19 @@ export async function onDamageRoll(message, area) {
 async function confirmDialog(name, total, rows) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const list = rows.map((r, i) => `<label class="pyre-wall-row"><input type="checkbox" name="w${i}" ${r.breaks ? "checked" : ""}>
-    <span><b>${esc(r.M.name)}</b> · ${r.eff.notes.length ? `<i>${esc(r.eff.notes.join(", "))}</i> · ` : ""}${r.dealt} damage (Hardness ${r.M.hardness}) · ${r.breaks ? "<em>breaks</em>" : `left at ${Math.max(1, r.left)}/${r.M.hp} HP`}</span></label>`).join("");
-  const content = `<p>${esc(name)} dealt <b>${total}</b> damage. Tick the walls that break:</p><div class="pyre-wall-list">${list}</div>
-    <p class="hint">Unticked walls keep the damage. Broken walls can be restored from the chat card, the Walls controls or Pyre Studio.</p>`;
+    <span><b>${esc(r.M.name)}</b> · ${r.eff.notes.length ? `<i>${esc(r.eff.notes.join(", "))}</i> · ` : ""}${t("Walls.Row", { dealt: r.dealt, hardness: r.M.hardness })} · ${r.breaks ? `<em>${t("Walls.Breaks")}</em>` : t("Walls.LeftAt", { hp: Math.max(1, r.left), max: r.M.hp })}</span></label>`).join("");
+  const content = `<p>${t("Walls.Dealt", { name: esc(name), total })}</p><div class="pyre-wall-list">${list}</div>
+    <p class="hint">${t("Walls.DialogHint")}</p>`;
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2) return new Set(rows.map((r, i) => (r.breaks ? i : -1)).filter((i) => i >= 0));
   try {
     const result = await DialogV2.wait({
-      window: { title: "Pyre: walls hit", icon: "fa-solid fa-dungeon" },
+      window: { title: t("Walls.DialogTitle"), icon: "fa-solid fa-dungeon" },
       content,
       buttons: [
-        { action: "apply", label: "Apply", icon: "fa-solid fa-hammer", default: true,
+        { action: "apply", label: t("Walls.Apply"), icon: "fa-solid fa-hammer", default: true,
           callback: (event, button) => { const f = button.form; return rows.map((r, i) => (f.elements[`w${i}`]?.checked ? i : -1)).filter((i) => i >= 0); } },
-        { action: "ignore", label: "Ignore", icon: "fa-solid fa-xmark", callback: () => null },
+        { action: "ignore", label: t("Walls.Ignore"), icon: "fa-solid fa-xmark", callback: () => null },
       ],
       rejectClose: false,
     });
@@ -231,8 +236,8 @@ async function postRestoreCard(docs) {
     const ids = docs.map((d) => d.id);
     const gms = game.users.filter((u) => u.isGM).map((u) => u.id);
     await ChatMessage.create({
-      content: `<div class="pyre-card"><p><i class="fa-solid fa-dungeon"></i> <b>${ids.length} wall${ids.length > 1 ? "s" : ""} broken.</b></p>
-        <button type="button" class="pyre-restore-btn" data-walls="${ids.join(",")}"><i class="fa-solid fa-rotate-left"></i> Restore</button></div>`,
+      content: `<div class="pyre-card"><p><i class="fa-solid fa-dungeon"></i> <b>${tn("Walls.Broken", ids.length)}</b></p>
+        <button type="button" class="pyre-restore-btn" data-walls="${ids.join(",")}"><i class="fa-solid fa-rotate-left"></i> ${t("Walls.Restore")}</button></div>`,
       whisper: gms, speaker: { alias: "Pyre" }, flags: { [MODULE_ID]: { restoreCard: ids } },
     });
   } catch { /* the Studio can still restore */ }
@@ -286,22 +291,21 @@ export function injectWallConfig(app, html) {
   const S = wallStats(doc);
   const own = (k) => { const v = doc.getFlag(MODULE_ID, k); return v === undefined || v === null ? "" : v; };
   const curMat = doc.getFlag(MODULE_ID, "material") ?? "";
-  const sceneMat = MATERIALS[sceneMaterial(doc.parent)];
   const M = MATERIALS[S.mat];
   const others = (canvas.walls?.controlled ?? []).filter((w) => w.document.id !== doc.id).length;
   const box = document.createElement("fieldset");
   box.className = "pyre-wall-section";
-  const opts = [`<option value="">Scene default (${sceneMat.name})</option>`]
-    .concat(Object.entries(MATERIALS).map(([id, m]) => `<option value="${id}" ${id === curMat ? "selected" : ""}>${m.name}${Number.isFinite(m.hp) ? ` (Hardness ${m.hardness}, ${m.hp} HP)` : ""}</option>`));
+  const opts = [`<option value="">${t("Walls.SceneDefault", { name: materialName(sceneMaterial(doc.parent)) })}</option>`]
+    .concat(Object.keys(MATERIALS).map((id) => `<option value="${id}" ${id === curMat ? "selected" : ""}>${materialLabel(id)}</option>`));
   const num = (v) => (Number.isFinite(v) ? v : "∞");
-  box.innerHTML = `<legend><i class="fa-solid fa-dungeon"></i> Pyre: breakable wall</legend>
-    <div class="form-group"><label>Material</label><div class="form-fields"><select data-pyre="material">${opts.join("")}</select></div></div>
-    <div class="form-group"><label>Hardness</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hardness" value="${own("hardness")}" placeholder="${num(M.hardness)}"></div></div>
-    <div class="form-group"><label>Max HP</label><div class="form-fields"><input type="number" min="1" step="1" data-pyre="maxHp" value="${own("maxHp")}" placeholder="${num(M.hp)}"></div></div>
-    <div class="form-group"><label>Current HP</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hp" value="${own("hp")}" placeholder="${num(S.maxHp)}">
-      <button type="button" data-pyre="heal" title="Back to full HP"><i class="fa-solid fa-heart"></i></button></div></div>
-    ${others ? `<div class="form-group"><label class="checkbox"><input type="checkbox" data-pyre="batch"> Also apply to the other ${others} selected wall${others > 1 ? "s" : ""}</label></div>` : ""}
-    <p class="hint">Empty fields use the material. Unbreakable ignores the numbers. Saves as you change it.</p>`;
+  box.innerHTML = `<legend><i class="fa-solid fa-dungeon"></i> ${t("Walls.Section")}</legend>
+    <div class="form-group"><label>${t("Walls.Material")}</label><div class="form-fields"><select data-pyre="material">${opts.join("")}</select></div></div>
+    <div class="form-group"><label>${t("Walls.Hardness")}</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hardness" value="${own("hardness")}" placeholder="${num(M.hardness)}"></div></div>
+    <div class="form-group"><label>${t("Walls.MaxHp")}</label><div class="form-fields"><input type="number" min="1" step="1" data-pyre="maxHp" value="${own("maxHp")}" placeholder="${num(M.hp)}"></div></div>
+    <div class="form-group"><label>${t("Walls.CurrentHp")}</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hp" value="${own("hp")}" placeholder="${num(S.maxHp)}">
+      <button type="button" data-pyre="heal" title="${t("Walls.Heal")}"><i class="fa-solid fa-heart"></i></button></div></div>
+    ${others ? `<div class="form-group"><label class="checkbox"><input type="checkbox" data-pyre="batch"> ${tn("Walls.AlsoApply", others)}</label></div>` : ""}
+    <p class="hint">${t("Walls.SectionHint")}</p>`;
   const batch = () => box.querySelector("[data-pyre=batch]")?.checked;
   const targets = () => [doc, ...(batch() ? canvas.walls.controlled.map((w) => w.document).filter((d) => d.id !== doc.id) : [])];
   const save = async (key, raw) => {
@@ -315,7 +319,7 @@ export function injectWallConfig(app, html) {
     });
     await canvas.scene.updateEmbeddedDocuments("Wall", updates);
     const n = updates.length;
-    ui.notifications?.info(`Pyre: ${n > 1 ? `${n} walls updated` : "wall updated"}.`);
+    ui.notifications?.info(tn("Walls.Updated", n));
   };
   for (const el of box.querySelectorAll("[data-pyre]")) {
     const key = el.dataset.pyre;
@@ -335,8 +339,8 @@ export function injectWallConfig(app, html) {
 /** Walls layer tools for the GM: put every broken wall back, and open the Scene tools. */
 export function wallTools(controls, openStudio) {
   if (!game.user?.isGM) return;
-  const restore = { name: "pyre-restore-walls", title: "Pyre: restore broken walls", icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
-    onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? `Pyre: ${n} wall${n > 1 ? "s" : ""} restored.` : "Pyre: no broken walls in this scene.")) };
+  const restore = { name: "pyre-restore-walls", title: t("Walls.RestoreTool"), icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
+    onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? tn("Walls.Restored", n) : t("Walls.NoneBroken"))) };
   restore.onClick = restore.onChange;
   if (Array.isArray(controls)) controls.find((c) => c.name === "walls")?.tools?.push(restore);
   else { const w = controls.walls; if (w?.tools) w.tools["pyre-restore-walls"] = restore; }

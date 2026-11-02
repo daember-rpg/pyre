@@ -5,6 +5,7 @@ import { Director } from "./director.js";
 import { wallTools } from "./walls.js";
 import { PyreStudio } from "./ui/studio.js";
 import { resolveSpell, resolveStrike } from "./resolver.js";
+import { t } from "./i18n.js";
 
 Hooks.once("init", () => {
   registerSettings();
@@ -25,7 +26,7 @@ Hooks.once("ready", () => {
   const version = mod.version ?? mod.data?.version ?? "?";
   console.log(`${MODULE_ID} | Ready, version ${version}`);
   // Lets the GM confirm which build is loaded (an old copy of the folder is the usual reason nothing changes)
-  if (game.user?.isGM) ui.notifications?.info(`Pyre ${version} is active.`);
+  if (game.user?.isGM) ui.notifications?.info(t("Notify.Active", { version }));
 });
 
 /* Studio button in the token controls (GM only). Handles the V13+ object form and the older array form. */
@@ -34,7 +35,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
   try { wallTools(controls); } catch (err) { console.warn("pyre | walls tools", err); }
   const tool = {
     name: "pyre-studio",
-    title: "Pyre Studio",
+    title: t("Studio.Title"),
     icon: "fa-solid fa-fire",
     button: true,
     order: 99,

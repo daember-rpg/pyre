@@ -5,6 +5,7 @@ import { resolveSpell, resolveStrike } from "../resolver.js";
 import { seedFrom } from "../core/util.js";
 import { onDamageRoll, onWallUpdate, restoreWalls, injectWallConfig } from "../walls.js";
 import { addScars, SCAR_ELEMENTS } from "../core/scars.js";
+import { t } from "../i18n.js";
 
 /** Areas that just played, by the item that made them: a later damage roll can break the walls they reached. */
 const recentAreas = new Map();
@@ -389,7 +390,7 @@ function addRestoreButton(message, html) {
   btn.addEventListener("click", async () => {
     btn.disabled = true;
     const n = await restoreWalls(ids);
-    btn.innerHTML = n ? '<i class="fa-solid fa-check"></i> Restored' : '<i class="fa-solid fa-check"></i> Already standing';
+    btn.innerHTML = `<i class="fa-solid fa-check"></i> ${n ? t("Walls.RestoredBtn") : t("Walls.Standing")}`;
   });
 }
 
@@ -407,14 +408,15 @@ function addRevealButtons(message, html) {
   bar.className = "pyre-reveal";
   const real = OUTCOME[ctx.outcome] ?? "hit";
   const label = document.createElement("span");
-  label.textContent = "Players saw a neutral strike. Replay as:";
+  label.textContent = t("Reveal.Label");
   bar.append(label);
-  for (const [key, text] of [["miss", "Miss"], ["hit", "Hit"], ["crit", "Critical"]]) {
+  for (const key of ["miss", "hit", "crit"]) {
+    const text = t(`Reveal.${key}`);
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = text;
     if (key === real) b.classList.add("real");
-    b.title = key === real ? "What actually happened" : "Show this to the players instead";
+    b.title = key === real ? t("Reveal.Real") : t("Reveal.Other");
     b.addEventListener("click", (ev) => {
       ev.preventDefault(); ev.stopPropagation();
       message.setFlag(MODULE_ID, "reveal", { outcome: key, at: Date.now() });

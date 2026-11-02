@@ -25,10 +25,10 @@ export const WEAPONS = {
   sling:     { name: "Sling", style: "stone", ranged: true, speed: 70, knock: 0.9, shake: 0.12, sparks: 0, dust: 1.1 },
   firearm:   { name: "Firearm", style: "shot", ranged: true, speed: 520, knock: 1.0, shake: 0.18, sparks: 0.5, dust: 0.6, muzzle: true },
   dart:      { name: "Thrown", style: "thrown", ranged: true, speed: 62, knock: 0.6, shake: 0.08, sparks: 0.5, dust: 0.2 },
-  fist:      { name: "Fist", style: "punch", ranged: false, knock: 1.0, shake: 0.16, sparks: 0.25, dust: 0.35 },
-  claw:      { name: "Claw", style: "claw", ranged: false, knock: 0.7, shake: 0.12, sparks: 0.2, dust: 0.25 },
-  jaws:      { name: "Jaws", style: "bite", ranged: false, knock: 0.9, shake: 0.16, sparks: 0.15, dust: 0.3 },
-  tail:      { name: "Tail", style: "sweep", ranged: false, knock: 1.5, shake: 0.32, sparks: 0.3, dust: 0.9 },
+  fist:      { name: "Fist", style: "punch", ranged: false, knock: 1.1, shake: 0.18, sparks: 0.4, dust: 0.35 },
+  claw:      { name: "Claw", style: "claw", ranged: false, knock: 0.7, shake: 0.12, sparks: 0.2, dust: 0.3, mark: "rake" },
+  jaws:      { name: "Jaws", style: "bite", ranged: false, knock: 1.0, shake: 0.2, sparks: 0.15, dust: 0.6, pebbles: true },
+  tail:      { name: "Tail", style: "sweep", ranged: false, knock: 1.5, shake: 0.32, sparks: 0.3, dust: 1.1, pebbles: true },
   bomb:      { name: "Bomb", style: "bomb", ranged: true, knock: 0.9, shake: 0.2, sparks: 0, dust: 0.5 },
 };
 // Alchemical bombs reuse the elemental rune looks as a 5 ft splash.

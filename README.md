@@ -1,178 +1,157 @@
 # Pyre
 
-Procedural spell, strike and condition effects for Pathfinder 2e on Foundry VTT V13/V14.
-Everything is drawn live on the GPU from code (three.js, bundled locally). No video files: the whole module is about 600 KB.
+Procedural spell, strike and condition effects for **Pathfinder 2e** on **Foundry VTT V13 and V14**.
+
+Everything is drawn live on the GPU from code (three.js, bundled locally). There are no video files, so the whole module is well under 1 MB, and every effect adapts to the spell, the weapon, the target and the map: fireballs fly and burst, breath weapons stop at walls, sparks bounce off them, swords leave cuts and axes leave gashes, and walls, doors and windows can break.
+
+Pyre works on its own. You do not need Sequencer, JB2A or any asset pack.
+
+## Installation
+
+In Foundry: **Add-on Modules → Install Module**, paste this manifest URL and click Install:
+
+```
+https://raw.githubusercontent.com/daember-rpg/pyre/main/module.json
+```
+
+Then enable **Pyre** in your world. Foundry tells you when an update is available.
 
 ## What plays, and when
 
 | In the game | What Pyre shows |
 | --- | --- |
-| Spell with an area, when its area is placed on the map (PF2e Regions: burst, cone, line, emanation, cylinder, square) | The area effect where it was placed |
-| Spell with an area that is never placed, when damage is rolled at targets | The area aimed at the targets (setting "Areas that are never placed") |
-| Spell with an emanation | Plays at once around the caster |
-| Spell attack (Ray of Frost, Hydraulic Push…) | Ray → impact, following the attack roll |
-| Spell with a save and targets but no area (Electric Arc, Heal…) | Bolt or pulse on each target you had targeted when casting |
-| Spell without damage (Haste, Fear, Mystic Armor…) | Tradition circle on the caster, then a blessing, hex or self glow |
-| Weapon, unarmed and NPC strikes | A signature per weapon group: sword arc, axe chop with a gash, two dagger stabs, flail lash and crack, hammer shockwave, pick star crack, polearm reap that pulls, spear thrust, shield bash, arrow, crossbow bolt, sling stone, firearm flash and smoke, spinning thrown weapons; plus punch, claws, jaws, tail and bombs. Property runes tint any of them |
-| Conditions and spell effects on an actor | Lasting auras (quickened, slowed, frightened, sickened, burning, bleeding, shielded, invisible, blessed, hexed) |
-| Creature summoned with Conjure | Summon circle and arrival; dissolve on dismissal |
+| A spell's area is placed on the map (burst, cone, line, emanation, cylinder, square) | The area effect where it was placed |
+| An area spell whose area is never placed, when damage is rolled at targets | The area aimed at those targets (setting *Areas that are never placed*) |
+| An emanation | Plays at once around the caster |
+| A spell attack (Ray of Frost, Hydraulic Push…) | Ray → impact, following the attack roll |
+| A spell with a save and targets but no area (Electric Arc, Heal…) | A bolt or pulse on each targeted creature |
+| A spell without damage (Haste, Fear, Mystic Armor…) | The tradition's circle on the caster, then a blessing, hex or self glow |
+| A creature's breath weapon or other area ability | Recognised from the ability's own data: cone or line, element, size |
+| Weapon, unarmed and NPC strikes | A signature per weapon group (see below), tinted by property runes |
+| Conditions and spell effects on an actor | Lasting auras: quickened, slowed, frightened, sickened, burning, bleeding, shielded, invisible, blessed, hexed, light… |
+| A creature summoned with Conjure | Summon circle and arrival; dissolve on dismissal |
 
-Effects are worked out from the item's own data (area, defense, damage types, traits, weapon group, runes). Attacks are read in this order: the GM's attack override, the PF2e weapon group, the attack's name in English or Portuguese (Claw/Garra, Jaws/Mandíbulas, Tail/Cauda, Longsword/Espada…), then traits and damage type. Every client plays the same effect from the same seed, without sockets.
+Effects are worked out from the item's data: area, defense, damage types, traits, weapon group and runes. Every client plays the same effect from the same seed, without sockets.
 
-## Secret rolls
+### Strikes
 
-When an attack roll is blind or whispered, players see a neutral strike: it lands, but shows no hit, miss or critical, and no rune effects.
+Each weapon group has its own signature:
+
+* **Sword:** an arc of steel and a cut across the target.
+* **Axe:** a heavy chop that leaves a gash in the floor.
+* **Dagger:** two quick stabs.
+* **Flail and whip:** a lash and a crack.
+* **Hammer, club and mace:** a shockwave of dust and pebbles.
+* **Pick:** a star crack in the floor.
+* **Polearm:** a long reap that pulls the target.
+* **Spear:** a long thrust.
+* **Shield:** a bash that pushes the target back.
+* **Ranged:** bow, crossbow, sling, firearm (muzzle flash and smoke) and spinning thrown weapons.
+* **Natural attacks:** punches, raking claws, biting jaws, tail sweeps.
+* **Alchemical bombs.**
+
+Attacks are read in this order:
+
+1. the GM's attack override;
+2. the PF2e weapon group;
+3. the attack's name (Claw, Jaws, Tail, Longsword…);
+4. its traits and damage type.
+
+Property runes add their look to any strike: flaming, frost, shock, corrosive, thundering, holy, unholy, astral, wounding, fearsome, ghost touch and speed.
+
+### Walls
+
+* **Walls stop areas** (world setting, on by default). Bursts, breaths and other areas stop at walls that block movement. Creatures behind a wall do not react, and sparks, flames and smoke bounce off it.
+* **Breakable walls** (world setting, off by default). After an area's damage roll, the walls it reaches take the damage minus their Hardness, following PF2e's object rules. The GM picks which walls break in a short dialog.
+  * A broken wall stops blocking. A collapse plays for everyone and rubble stays on the floor.
+  * Doors burst into planks and windows shatter into glass.
+  * Restore walls from the GM's chat card, from the Walls layer controls, or from Pyre Studio. The rubble flies back and the wall closes.
+  * Each wall's material, Hardness and HP are set in the wall's own sheet: double-click a wall and use the **Pyre** section. You can apply the same values to every selected wall at once.
+  * Walls with no material of their own use the scene's default from Pyre Studio → Scene. Doors default to wood and windows to glass.
+  * **Materials react to damage types:**
+
+  | Material | Hardness / HP | Takes more | Takes less |
+  |---|---|---|---|
+  | Wood | 10 / 40 | fire ×2, acid and slashing ×1.25 | cold and piercing ÷2 |
+  | Stone | 14 / 56 | sonic ×2, bludgeoning and acid ×1.5 | fire, cold, electricity, piercing and slashing ÷2 |
+  | Iron / steel | 18 / 72 | acid ×2, cold ×1.5 | fire, electricity, piercing and slashing ÷2 |
+  | Glass | 2 / 8 | sonic and bludgeoning ×2, cold ×1.5 | — |
+
+  Force hits every material the same. Mental, spirit, poison, vitality, void and bleed damage do not harm walls.
+
+### Lasting marks
+
+With **Lasting marks** on (world setting), area spells leave scorch, frost and acid burns on the map until you clear them in Pyre Studio → Scene. Rubble from broken walls is always kept until the wall is restored.
+
+### Secret rolls
+
+When an attack roll is blind or whispered, players see a neutral strike. It lands, but shows no hit, miss or critical, and no rune effects.
+
 The GM sees the real result, plus **Replay as Miss / Hit / Critical** buttons on the chat card. Clicking one plays that result for everyone.
 
 ## Pyre Studio (GM)
 
-Open it from the fire icon in the token controls, or from Configure Settings → Pyre.
+Open it from the fire icon in the token controls, or from **Configure Settings → Pyre**.
 
-* **Test on the map**: select a token, target others with T, and play any standard effect, strike or cast glow (only on your screen).
-* **Overrides**: change one spell's delivery, element, material or colours, or turn its animation off. A very dark core colour switches to shadow rendering. Under **Attacks**, pick how any attack name looks (and add a rune look, such as shock on a "Shadow Claw"). Overrides are stored in the world.
+* **Test on the map:** select a token, target others with T, and play any standard effect, strike or cast glow. Tests play only on your screen.
+* **Overrides:**
+  * change one spell's delivery, element, material or colours, or turn its animation off (an enemy's black lightning, an ice fireball…);
+  * under **Attacks**, choose how any attack name looks, and add a rune look if you like.
+* **Scene:**
+  * the scene's default wall material and the damage-type rule;
+  * set the material of selected walls, break them, or restore broken walls;
+  * clear lasting marks.
 
 ## Settings
 
-Per player: on/off, quality, brightness, glow, screen shake, token reactions, ground marks, casting circle size, condition auras (everyone / only my and allied tokens / off), debug logging.
-World: animate spells, animate strikes, animate posted (not cast) spell cards, areas without placing them.
+| Each player | The world (GM) |
+| --- | --- |
+| Show effects | Walls stop areas |
+| Quality (low, medium, high) | Breakable walls |
+| Adaptive resolution | Lasting marks |
+| Brightness and glow | Animate spells |
+| Screen shake and impact zoom | Animate strikes |
+| Token reactions | Animate posted spell cards |
+| Ground marks and how long they stay | Areas that are never placed |
+| Smoke and dust duration | |
+| Floor effects under tokens | |
+| Casting circle size | |
+| Condition auras (everyone, only my and allied tokens, off) | |
+| Debug logging | |
 
-**Debug logging** shows a small box at the bottom left with what Pyre decided for each attack and spell, and why (or why it played nothing). Turn it on when something looks wrong.
+**Debug logging** shows a small box with what Pyre decided for each attack and spell, and why. If it played nothing, the box says why. Turn it on when something looks wrong.
 
-## Conjure
+### Performance
 
-With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
+Pyre only runs while an effect is playing. On older laptops, set **Quality** to Low. **Adaptive resolution** lowers the effects' resolution by itself when frames run long, and raises it again once they are quick.
 
-## Changes in 0.6.0
+## Translating Pyre
 
-* **Breakable doors and windows.** Closed doors (including secret and locked ones) and windows (walls that block movement but let sight through, Foundry's window preset) break like walls. Doors default to wood and windows to glass unless you give them a material.
-  * A door bursts into long planks and leaves boards on the floor; a broken door is just a hole (no door control) until restored, when it comes back as it was, closed or locked.
-  * A window shatters into a spray of glinting shards and leaves broken glass on the floor.
-* Everything in the interface is now in English: the confirmation dialog, the chat card, the wall sheet section and notifications.
+All text lives in `lang/en.json`. To translate:
 
-## Changes in 0.5.3
+1. Copy `lang/en.json` to your language, for example `lang/pt-BR.json`.
+2. Translate the values. Keep the keys and the `{placeholders}` as they are.
+3. Add the language to `module.json` under `languages`.
 
-* Each wall's sheet (double-click a wall) has a **Pyre: parede quebrável** section: material, Hardness, maximum HP and current HP (with a button back to full). Empty fields use the material's numbers. Tick **apply to the other selected walls** to set many walls at once. Saves the moment a field changes.
-* The module settings only turn breakable walls on or off. The scene's default material and the "materials react to damage types" rule moved to Pyre Studio → Scene; the default material is now per scene.
+Any key you leave out falls back to English. Pull requests with translations are welcome.
 
-## Changes in 0.5.2
+## Compatibility
 
-* Materials react to damage types (world setting *Materials react to damage types*, on by default). Each part of the damage is multiplied before Hardness:
+* Foundry VTT V13 and V14.
+* Pathfinder 2e system; built and tested on 8.x.
+* Works with PF2e's Regions for placed areas.
+* Conjure: with both active, Conjure handles the summoning and Pyre draws it.
 
-  | Material | Takes more | Takes less |
-  |---|---|---|
-  | Wood | fire ×2, acid and slashing ×1.25 | cold and piercing ÷2 |
-  | Stone | sonic ×2, bludgeoning and acid ×1.5 | fire, cold, electricity, piercing and slashing ÷2 |
-  | Iron / steel | acid ×2, cold ×1.5 | fire, electricity, piercing and slashing ÷2 |
-  | Glass | sonic and bludgeoning ×2, cold ×1.5 | — |
+## For developers
 
-  Force hits every material the same. The confirmation dialog shows why ("fogo ×2").
-* What broke the wall shows on the pieces: wood broken by fire flies off charred with burning edges and leaves charred rubble; frost leaves pale, frozen rubble; acid, lightning, sound and force tint the edges of the flying pieces.
+A small API is on `game.modules.get("pyre").api`. For example, `api.preset("std-fireball", caster, [target])` plays a standard preset from one token at others.
 
-## Changes in 0.5.1
+## Credits and license
 
-* New wall break: the wall cracks with a flash, then chunks (and a few big slabs) fly out, mostly away from the blast, tumble and land as rubble in a cloud of dust; the rubble left on the floor lies on that same side.
-* Restoring a wall plays it backwards: the rubble rises, flies back into the wall and the wall closes with a seam of light.
-* Easier restore:
-  * a card only the GM sees after each break, with a **Restaurar** button for those walls;
-  * a **restore broken walls** button in the Walls layer controls;
-  * Pyre Studio → Scene, as before.
-* **Material (Pyre)** field in each wall's own configuration sheet (double-click a wall), saved the moment it changes. Selecting several walls and setting them in Pyre Studio → Scene still works.
+Pyre is free. It is made by Fernando (daember-rpg), with Claude.
 
-## Changes in 0.5.0
+The code is released under the MIT License (see `LICENSE`). It bundles [three.js](https://threejs.org), also MIT (see `scripts/vendor/THREE-LICENSE.txt`).
 
-* **Breakable walls** (world setting, off by default). After an area's damage roll (spells and creature abilities such as Breath Weapon), the walls the blast reaches take the damage minus their Hardness, using PF2e's structure statistics: wood 10/40, stone 14/56, iron 18/72, glass 2/8, or unbreakable. You confirm which walls break; the rest keep their damage. A broken wall stops blocking movement, sight, light and sound, collapses in splinters or rubble for everyone, and leaves rubble on the floor.
-  * Pyre Studio → **Scene**: give selected walls a material, break selected walls by hand, restore every broken wall (and its rubble).
-  * Setting **Wall material (default)** for walls without one.
-* **Lasting marks** (world setting, off by default): fire, cold, acid, electricity, sonic, force and kinetic areas leave scorch, frost, acid burns or cracks on the map, stopped by walls, until you clear them in Pyre Studio → Scene. Drawn once into the scene, beneath the tokens.
-* **Light** has its own aura: a warm pool of lantern light at the creature's feet and a small flame bobbing beside it, instead of the generic blessing.
+Pathfinder is a trademark of Paizo Inc. Pyre is not published, endorsed or approved by Paizo.
 
-## Changes in 0.4.1
-
-* Flames, sparks, embers and smoke bounce off walls instead of being cut by them: whatever reaches a wall that blocks movement rebounds with some of its speed and piles up along it. Strike sparks and dust bounce off nearby walls too. Follows the *Walls stop areas* setting.
-
-## Changes in 0.4.0
-
-* Floor effects are drawn beneath the tokens, inside Foundry's own canvas (between tiles and tokens, like Sequencer's "below tokens"): floor light, scorch and frost, gashes and cracks, smoke and dust, casting circles and auras that sit at the feet. Flames, projectiles and lightning stay above. If Foundry's canvas does not accept the layer, everything is drawn above as before. Setting: *Floor effects under tokens* (per computer).
-* Walls stop areas: bursts, breaths, columns and fields are clipped to what Foundry says the blast reaches from its origin (walls that block movement; open doors let it through), and creatures behind a wall do not react. Setting: *Walls stop areas* (world).
-* Softer leading edge on weapon swings.
-
-## Changes in 0.3.1
-
-* New settings (per computer): **Smoke and dust duration** (how long smoke hangs over tokens and the map) and **Ground mark duration** in seconds (scorch, frost, gashes, cracks).
-
-## Changes in 0.3.0
-
-* Every PF2e weapon group has its own strike:
-  * Sword: steel arc. Axe: heavy chop, wood chips and a gash left on the floor. Dagger/knife: two quick, quiet stabs.
-  * Flail/whip: a wavering lash and a crack. Hammer/club: a dust shockwave and pebbles. Pick: a puncture and a star crack.
-  * Polearm: a long reap from reach that pulls the target in. Spear: a long thrust. Shield: a wave front that shoves.
-  * Crossbow: a fast bolt with a snap. Sling: a stone in a short arc. Firearm: muzzle flash, lingering smoke, dry impact. Thrown weapons spin through the air.
-* A melee weapon with the thrown trait used beyond its reach (thrown dagger, javelin, hatchet) plays as a thrown weapon.
-* Names in English and Portuguese map to the new groups (Machado, Adaga, Chicote, Picareta, Alabarda, Escudo, Besta, Funda, Pistola…).
-* Studio and attack overrides list all the new looks.
-
-## Changes in 0.2.10
-
-* Creature abilities also read older inline rolls (`[[/r 11d6[cold]]]`) and plain text ("11d6 cold damage in a 30-foot cone").
-
-## Changes in 0.2.9
-
-* NPC abilities such as Breath Weapon read their element and area from the inline rolls in their text (`@Damage[...[acid]]`, `@Template[line|distance:80]`), so a black dragon breathes acid and a red dragon fire.
-
-## Changes in 0.2.8
-
-* Pyre Studio: the Overrides tab opens again (Foundry V14 reserves the `tab` action name).
-
-## Changes in 0.2.7
-
-* The real cause of the flat white shapes and the missing trails on macOS: Pyre's layer handed the compositor light with no alpha of its own. The Mac compositor drops that light and shows only the dark backings, in white. The layer now writes valid premultiplied colour, so trails, lightning, glows and sword cuts look the same on every machine.
-
-## Changes in 0.2.6
-
-* Fixed effects turning into flat white shapes (sword cuts, fireball puffs, lightning) once Foundry had been open for a while: the shader clock grew too large for the GPU's precision. It now stays small.
-* Short throws still fly long enough to be seen (Fireball at least ~0.5 s), and the trail thins with the distance instead of piling up.
-* Sword cuts and fire bursts are less white.
-
-## Changes in 0.2.5
-
-* Projectile spells (Fireball, Chain Lightning, rays, bolts, darts) gather in the caster's hands first, lighting the floor, then fly; Fireball's trail is longer.
-* Area spells always wait for their area to be placed, even with targets. If nobody places it and damage is rolled at targets, the area is aimed at them. Emanations still play at once around the caster.
-
-## Changes in 0.2.4
-
-* Spells cast from any source play (sheet, Triad, macros). PF2e 8.4 does not always mark a cast, so any spell card from a spellcasting entry counts as cast.
-* Blade strikes no longer wash out to a white blob: thinner steel-tinted cut, softer swing and token flash, rune fire and ground light toned down (two runes share the light), Holy rune more golden.
-* Removed the deprecated renderChatMessage hook.
-
-## Changes in 0.2.3
-
-* Sword and other blade strikes draw a crescent cut across the target, with a dark backing so it reads on bright maps; the token flash is softer for blades, claws and jaws.
-* Spells without a slug, or with translated (Babele) names, are matched by their English name.
-* A spell cast without targets plays when its damage is rolled with a target.
-
-## Changes in 0.2.2
-
-* The GM sees "Pyre 0.2.2 is active" when the world loads, to confirm which copy is installed.
-* Strikes also read the attack roll's own options (item:group, item:base, item:trait), so the weapon is known even if its item cannot be found.
-
-## Changes in 0.2.1
-
-* Items are read through PF2e itself (the chat card's item): strikes get their real weapon, spells their cast variant.
-* A placed area finds its caster from the chat card first, so Fireball flies from the caster to the area again.
-* Debug box shows the weapon's type, group, base weapon and traits.
-
-## Changes in 0.2.0
-
-* Fixed: spells with damage never played (PF2e keeps damage kinds as a Set).
-* Fixed: spell areas were never detected. PF2e places areas as Regions; all shapes are read now, with the direction you aimed.
-* Area spells cast at targets play without placing the area; emanations play around the caster at once.
-* NPC attacks are recognised by name; new looks for claws, jaws and tail or wing sweeps. The sword slash lasts a little longer so it reads at table speed.
-* Attack overrides in Pyre Studio; on-screen debug box.
-
-## Known limits (0.2.0)
-
-* Effects draw on a transparent layer above the board, so they cannot bend the map underneath: heat haze and the chromatic kick from the labs are not in the module. Light and ground marks are painted on top.
-* Effects are drawn above walls and fog of war. Strikes and casts play only when you can see the caster or the target; areas always play.
-* Flurry of Blows plays as two separate strikes, one per attack roll.
-* Spell areas are read from the Region's first shape; report anything that plays in the wrong spot.
-* If an area spell is cast at targets and its area is also placed afterwards, only the first (aimed at the targets) plays.
+See `CHANGELOG.md` for what changed in each version.

@@ -206,6 +206,24 @@ void main(){
     vec3 col = mix(vec3(0.03, 0.022, 0.015), vec3(0.55, 0.48, 0.38), clamp(lip - m, 0.0, 1.0));
     gl_FragColor = vec4(col*alpha, alpha);
     return;
+  } else if(uMode > 1.5){
+    // Claw rake: three parallel torn scratches with pale lips
+    float lc = 0.0, lipc = 0.0;
+    for(int i = 0; i < 3; i++){
+      float fi = float(i) - 1.0;
+      float n = texture2D(uNoise, vec2(a*0.15 + uSeed + fi*0.31, 0.61)).r;
+      float half_ = uLen*(0.5 - abs(fi)*0.08);
+      float along = 1.0 - smoothstep(half_*0.55, half_, abs(a - fi*0.12*uLen));
+      float off = l - fi*uLen*0.16 - a*0.05*fi + (n - 0.5)*0.12;
+      float w = 0.2*along*(0.6 + 0.8*n);
+      lc = max(lc, (1.0 - smoothstep(w*0.4, w + 0.03, abs(off)))*step(0.05, along));
+      float lq = (off - w*1.3)/(w*0.45 + 0.01);
+      lipc = max(lipc, exp(-lq*lq)*along*0.3);
+    }
+    float alpha = clamp(max(lc, lipc)*uA, 0.0, 1.0);
+    vec3 col = mix(vec3(0.03, 0.022, 0.015), vec3(0.55, 0.48, 0.38), clamp(lipc - lc, 0.0, 1.0));
+    gl_FragColor = vec4(col*alpha, alpha);
+    return;
   } else {
     float r = length(rel);
     for(int i = 0; i < 7; i++){

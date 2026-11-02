@@ -7,56 +7,57 @@ export function registerSettings() {
   const world = (key, data) => game.settings.register(MODULE_ID, key, { scope: "world", config: true, ...data });
 
   game.settings.registerMenu(MODULE_ID, "studio", {
-    name: "Pyre Studio",
-    label: "Open Pyre Studio",
-    hint: "Test effects on the current scene and change how individual spells look.",
+    name: "PYRE.Setting.studio.Name",
+    label: "PYRE.Setting.studio.Label",
+    hint: "PYRE.Setting.studio.Hint",
     icon: "fa-solid fa-fire",
     type: PyreStudio,
     restricted: true,
   });
 
-  client("enabled", { name: "Show effects", hint: "Turn every Pyre effect on or off on this computer.", type: Boolean, default: true });
+  client("enabled", { name: "PYRE.Setting.enabled.Name", hint: "PYRE.Setting.enabled.Hint", type: Boolean, default: true });
   client("quality", {
-    name: "Quality", hint: "Low suits older laptops; High uses more particles and a sharper image.",
-    type: String, choices: { low: "Low", medium: "Medium", high: "High" }, default: "high",
+    name: "PYRE.Setting.quality.Name", hint: "PYRE.Setting.quality.Hint",
+    type: String, choices: { low: "PYRE.Setting.quality.Choice.low", medium: "PYRE.Setting.quality.Choice.medium", high: "PYRE.Setting.quality.Choice.high" }, default: "high",
   });
-  client("intensity", { name: "Brightness", hint: "Scales how bright effects are on this computer.", type: Number, range: { min: 0.3, max: 2, step: 0.05 }, default: 1 });
-  client("bloom", { name: "Glow (bloom)", hint: "How much bright effects bleed light around them. 0 turns it off.", type: Number, range: { min: 0, max: 2, step: 0.05 }, default: 0.7 });
-  client("screenShake", { name: "Screen shake and impact zoom", hint: "Shake and punch the map on heavy hits.", type: Boolean, default: true });
-  client("tokenReactions", { name: "Token reactions", hint: "Struck tokens are pushed back, squash and flash. Purely visual; tokens never move on the map.", type: Boolean, default: true });
-  client("groundMarks", { name: "Ground marks", hint: "Scorch, frost, wet stone and cracks left on the floor for a few seconds.", type: Boolean, default: true });
-  client("smokeTime", { name: "Smoke and dust duration", hint: "How long smoke and dust hang over the map and tokens. 1 is the full look; lower clears them sooner.", type: Number, range: { min: 0.2, max: 1.5, step: 0.05 }, default: 1 });
-  client("markTime", { name: "Ground mark duration (seconds)", hint: "How long scorch, frost, gashes and cracks stay on the floor.", type: Number, range: { min: 2, max: 30, step: 1 }, default: 12 });
-  client("underTokens", { name: "Floor effects under tokens", hint: "Scorch, floor light, smoke, dust and casting circles are drawn beneath the tokens (reload to apply).", type: Boolean, default: true, requiresReload: true });
-  client("circleSize", { name: "Casting circle size", type: Number, range: { min: 0.5, max: 2, step: 0.05 }, default: 1 });
+  client("adaptive", { name: "PYRE.Setting.adaptive.Name", hint: "PYRE.Setting.adaptive.Hint", type: Boolean, default: true });
+  client("intensity", { name: "PYRE.Setting.intensity.Name", hint: "PYRE.Setting.intensity.Hint", type: Number, range: { min: 0.3, max: 2, step: 0.05 }, default: 1 });
+  client("bloom", { name: "PYRE.Setting.bloom.Name", hint: "PYRE.Setting.bloom.Hint", type: Number, range: { min: 0, max: 2, step: 0.05 }, default: 0.7 });
+  client("screenShake", { name: "PYRE.Setting.screenShake.Name", hint: "PYRE.Setting.screenShake.Hint", type: Boolean, default: true });
+  client("tokenReactions", { name: "PYRE.Setting.tokenReactions.Name", hint: "PYRE.Setting.tokenReactions.Hint", type: Boolean, default: true });
+  client("groundMarks", { name: "PYRE.Setting.groundMarks.Name", hint: "PYRE.Setting.groundMarks.Hint", type: Boolean, default: true });
+  client("smokeTime", { name: "PYRE.Setting.smokeTime.Name", hint: "PYRE.Setting.smokeTime.Hint", type: Number, range: { min: 0.2, max: 1.5, step: 0.05 }, default: 1 });
+  client("markTime", { name: "PYRE.Setting.markTime.Name", hint: "PYRE.Setting.markTime.Hint", type: Number, range: { min: 2, max: 30, step: 1 }, default: 12 });
+  client("underTokens", { name: "PYRE.Setting.underTokens.Name", hint: "PYRE.Setting.underTokens.Hint", type: Boolean, default: true, requiresReload: true });
+  client("circleSize", { name: "PYRE.Setting.circleSize.Name", type: Number, range: { min: 0.5, max: 2, step: 0.05 }, default: 1 });
   client("auras", {
-    name: "Condition auras",
-    hint: "Lasting looks for conditions and spell effects (quickened, frightened, burning…).",
-    type: String, choices: { everyone: "On every creature", friendly: "Only on my and allied tokens", off: "Off" }, default: "everyone",
+    name: "PYRE.Setting.auras.Name",
+    hint: "PYRE.Setting.auras.Hint",
+    type: String, choices: { everyone: "PYRE.Setting.auras.Choice.everyone", friendly: "PYRE.Setting.auras.Choice.friendly", off: "PYRE.Setting.auras.Choice.off" }, default: "everyone",
     onChange: () => Director.get().auras.refreshAll(),
   });
 
-  world("wallsBlock", { name: "Walls stop areas", hint: "Bursts, breaths and other areas stop at walls that block movement, and creatures behind them do not react.", type: Boolean, default: true });
-  world("breakableWalls", { name: "Breakable walls", hint: "After an area's damage roll, walls it reaches can break; you confirm which. Each wall's material, Hardness and HP are set in the wall's own sheet; scene defaults and rules in Pyre Studio → Scene.", type: Boolean, default: false });
+  world("wallsBlock", { name: "PYRE.Setting.wallsBlock.Name", hint: "PYRE.Setting.wallsBlock.Hint", type: Boolean, default: true });
+  world("breakableWalls", { name: "PYRE.Setting.breakableWalls.Name", hint: "PYRE.Setting.breakableWalls.Hint", type: Boolean, default: false });
   // Wall rules live with the walls: per wall in its sheet, per scene and rules in Pyre Studio → Scene
-  world("defaultWallMaterial", { config: false, name: "Wall material (default)", hint: "For walls without their own material. Set walls one by one in Pyre Studio → Scene.", type: String,
-    choices: { stone: "Stone (Hardness 14, 56 HP)", wood: "Wood (Hardness 10, 40 HP)", metal: "Iron / steel (Hardness 18, 72 HP)", glass: "Glass (Hardness 2, 8 HP)", none: "Unbreakable" }, default: "stone" });
-  world("wallWeakness", { config: false, name: "Materials react to damage types", hint: "Wood takes double from fire; stone double from sonic and more from bludgeoning and acid, half from fire and cold; metal double from acid; glass double from sonic and bludgeoning.", type: Boolean, default: true });
-  world("persistentMarks", { name: "Lasting marks", hint: "Scorch, frost and acid burns stay on the map after an area spell, until you clear them in Pyre Studio → Scene.", type: Boolean, default: false,
+  world("defaultWallMaterial", { config: false, name: "PYRE.Setting.defaultWallMaterial.Name", hint: "PYRE.Setting.defaultWallMaterial.Hint", type: String,
+    choices: { stone: "PYRE.Setting.defaultWallMaterial.Choice.stone", wood: "PYRE.Setting.defaultWallMaterial.Choice.wood", metal: "PYRE.Setting.defaultWallMaterial.Choice.metal", glass: "PYRE.Setting.defaultWallMaterial.Choice.glass", none: "PYRE.Setting.defaultWallMaterial.Choice.none" }, default: "stone" });
+  world("wallWeakness", { config: false, name: "PYRE.Setting.wallWeakness.Name", hint: "PYRE.Setting.wallWeakness.Hint", type: Boolean, default: true });
+  world("persistentMarks", { name: "PYRE.Setting.persistentMarks.Name", hint: "PYRE.Setting.persistentMarks.Hint", type: Boolean, default: false,
     onChange: () => Director.get().scars.refresh() });
-  world("spells", { name: "Animate spells", hint: "Casts, spell attacks and templates.", type: Boolean, default: true });
-  world("strikes", { name: "Animate strikes", hint: "Weapon, unarmed and NPC attacks.", type: Boolean, default: true });
+  world("spells", { name: "PYRE.Setting.spells.Name", hint: "PYRE.Setting.spells.Hint", type: Boolean, default: true });
+  world("strikes", { name: "PYRE.Setting.strikes.Name", hint: "PYRE.Setting.strikes.Hint", type: Boolean, default: true });
   world("animatePostedCards", {
-    name: "Animate posted spell cards",
-    hint: "Also animate spell cards that were posted to chat without being cast.",
+    name: "PYRE.Setting.animatePostedCards.Name",
+    hint: "PYRE.Setting.animatePostedCards.Hint",
     type: Boolean, default: false,
   });
   world("areaWithoutPlacing", {
-    name: "Areas that are never placed",
-    hint: "Area spells wait for their area to be placed. If nobody places it and damage is rolled at targeted creatures, aim the area at them. Emanations always play around the caster at once.",
+    name: "PYRE.Setting.areaWithoutPlacing.Name",
+    hint: "PYRE.Setting.areaWithoutPlacing.Hint",
     type: Boolean, default: true,
   });
-  world("overrides", { name: "Spell overrides", type: Object, default: {}, config: false });
-  world("strikeOverrides", { name: "Attack overrides", type: Object, default: {}, config: false });
-  client("debug", { name: "Debug logging", hint: "Show what Pyre decides for each attack and spell in a small box on screen, and write it to the console (F12).", type: Boolean, default: false });
+  world("overrides", { name: "PYRE.Setting.overrides.Name", type: Object, default: {}, config: false });
+  world("strikeOverrides", { name: "PYRE.Setting.strikeOverrides.Name", type: Object, default: {}, config: false });
+  client("debug", { name: "PYRE.Setting.debug.Name", hint: "PYRE.Setting.debug.Hint", type: Boolean, default: false });
 }

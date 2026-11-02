@@ -11,6 +11,7 @@ import { resolveSpell, resolveStrike } from "./resolver.js";
 import { PRESETS } from "./data/presets.js";
 import { seedFrom } from "./core/util.js";
 import { ScarLayer } from "./core/scars.js";
+import { t } from "./i18n.js";
 
 function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
 
@@ -282,7 +283,7 @@ export class Director {
       case "column": req = { recipe: "column", look, at: aim.clone(), radius: 10, targets: others }; break;
       case "field": req = { recipe: "field", look, at: aim.clone(), side: 15, targets: others }; break;
       default:
-        if (!list.length) { ui.notifications.info("Pyre: target a token first (T) to test this effect."); return; }
+        if (!list.length) { ui.notifications.info(t("Notify.TargetFirst")); return; }
         this.playTargeted({ plan: { look, engineRecipe: p.recipe, recipe: p.recipe }, caster, targets: list.map((x) => x.token), outcome: "hit", seed });
         return;
     }
@@ -292,7 +293,7 @@ export class Director {
 
   playTestStrike(spec, attacker, target) {
     const a = this.info(attacker), t = this.info(target);
-    if (!a || !t) { ui.notifications.info("Pyre: select an attacker and target a token (T) first."); return; }
+    if (!a || !t) { ui.notifications.info(t("Notify.AttackerAndTarget")); return; }
     this.#add(new StrikeEffect(this.overlay, this.fx, { ...spec, attacker: a, target: t, nearby: this.bystanders([attacker, target]), seed: Math.floor(Math.random() * 1e9) }));
   }
 

@@ -196,7 +196,7 @@ export class Overlay {
 
   #resize(w, h) {
     const q = setting("quality", "high");
-    const dpr = Math.min(window.devicePixelRatio || 1, QUALITY_DPR[q] ?? 1.5);
+    const dpr = Math.max(0.5, Math.min(window.devicePixelRatio || 1, QUALITY_DPR[q] ?? 1.5) * (this.adapt ?? 1));
     if (w === this.size.w && h === this.size.h && dpr === this.size.dpr) return;
     this.size = { w, h, dpr };
     this.renderer.setPixelRatio(dpr);
@@ -257,10 +257,26 @@ export class Overlay {
     return true;
   }
 
+  /**
+   * Adaptive resolution: when frames run long while effects play (a busy scene on a weaker GPU), render the
+   * effects at a lower resolution, and climb back once frames are quick again. Turned off by "Adaptive resolution".
+   */
+  #adaptResolution(raw) {
+    this.adapt ??= 1;
+    // A gap of a second or more is a hidden tab or a breakpoint, not a slow GPU
+    if (!(raw > 0 && raw < 1) || !this.effects.size || !setting("adaptive", true)) { this.slow = 0; this.fast = 0; return; }
+    if (raw > 0.026) { this.slow = (this.slow ?? 0) + Math.min(raw, 0.1); this.fast = 0; }
+    else if (raw < 0.0145) { this.fast = (this.fast ?? 0) + raw; this.slow = Math.max(0, (this.slow ?? 0) - raw * 0.5); }
+    if (this.slow > 0.5 && this.adapt > 0.5) { this.adapt = Math.max(0.5, this.adapt - 0.15); this.slow = 0; }
+    else if (this.fast > 2.5 && this.adapt < 1) { this.adapt = Math.min(1, this.adapt + 0.1); this.fast = 0; }
+  }
+
   #frame(now) {
     if (!canvas?.ready) { this.running = false; return; }
-    const dt = Math.min(0.05, (now - this.last) / 1000) * (globalThis.__pyreTimeScale ?? 1);
+    const raw = (now - this.last) / 1000;
+    const dt = Math.min(0.05, raw) * (globalThis.__pyreTimeScale ?? 1);
     this.last = now;
+    this.#adaptResolution(raw);
     // Shader clock: the page clock grows for hours in a Foundry session, and at those values the GPU's
     // texture lookups and sines lose precision (noise turned into flat white shapes). Keep it small.
     const clock = ((now / 1000 + (globalThis.__pyreClockShift ?? 0)) % 256);

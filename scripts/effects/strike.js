@@ -312,7 +312,7 @@ export class StrikeEffect {
     const ev = this.events = [];
     if (!W.ranged) {
       const wind = { chop: -13, bash: -10, reap: -9, blunt: -9, stab: -3, pierce: -9 }[W.style] ?? -7;
-      const lunge = { chop: 30, bash: 40, reap: 14, stab: 18, lash: 12 }[W.style] ?? 26;
+      const lunge = { chop: 30, bash: 40, reap: 14, stab: 18, lash: 12, bite: 40, punch: 32, claw: 22, sweep: 18 }[W.style] ?? 26;
       ev.push({ time: 0, fn: () => this.fx.nudge(a.token, d, wind) });
       ev.push({ time: plan.release, fn: () => this.fx.nudge(a.token, d, lunge) });
       if (plan.impact2T) {
@@ -370,6 +370,12 @@ export class StrikeEffect {
       }
     }
     if ((W.style === "claw" || W.style === "bite") && !quiet) specs.push({ d: 0, dur: 0.2, r1: 2.2, w: 0.22, a: 0.6, color: [1, 0.9, 0.85] });
+    // Jaws: the snap pushes a puff of dust out from under the target
+    if (W.style === "bite" && !quiet) specs.push({ d: 0.03, dur: 0.45, r1: 4.5, w: 0.8, a: 0.4, dark: true, color: [0.3, 0.26, 0.2] });
+    // Fist: a sharp star of light inside the impact ring
+    if (W.style === "punch" && !quiet) specs.push({ d: 0, dur: 0.09, r1: 1.2, w: 0.6, a: 1.8, color: [1, 1, 0.95] });
+    // Tail: a heavy sweep drags a wide ring of dust behind it
+    if (W.style === "sweep" && !quiet) specs.push({ d: 0.05, dur: 0.7, r1: 9 * (0.8 + 0.2 * plan.weight), w: 1.4, a: 0.38, dark: true, color: [0.36, 0.32, 0.26] });
     if ((W.style === "blunt" || W.style === "sweep") && !quiet) specs.push({ d: 0, dur: 0.4, r1: 6 * (0.8 + 0.2 * plan.weight), w: 0.7, a: 0.55, dark: true, color: [0.16, 0.13, 0.1] });
     // Hammer: a shockwave of dust rolls across the floor
     if (W.quake && !quiet) {
@@ -510,6 +516,13 @@ export class StrikeEffect {
         mk.uDir.value.set(plan.dir.x * c - plan.dir.y * s2, plan.dir.x * s2 + plan.dir.y * c);
         mk.uC.value.copy(r.target.ft); mk.uMode.value = 0; mk.uLen.value = tr * 2.4 + 2.5 * plan.weight;
         this.mark.position.set(r.target.ft.x, r.target.ft.y, 0);
+      } else if (W.mark === "rake") {
+        const ang = 0.95 * plan.side, c = Math.cos(ang), s2 = Math.sin(ang);
+        mk.uDir.value.set(plan.dir.x * c - plan.dir.y * s2, plan.dir.x * s2 + plan.dir.y * c);
+        // Scratched into the floor at the near edge of the target, where the token does not hide it
+        const at = r.target.ft.clone().addScaledVector(plan.dir, -tr * 0.75);
+        mk.uC.value.copy(at); mk.uMode.value = 2; mk.uLen.value = tr * 1.6 + 1.4 * plan.weight;
+        this.mark.position.set(at.x, at.y, 0);
       } else {
         mk.uDir.value.copy(plan.dir); mk.uC.value.copy(plan.impact); mk.uMode.value = 1; mk.uLen.value = 2.4 * (0.8 + 0.25 * plan.weight);
         this.mark.position.set(plan.impact.x, plan.impact.y, 0);

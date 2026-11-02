@@ -1,3 +1,411 @@
 {
-  "PYRE.Studio": "Pyre Studio"
+  "PYRE": {
+    "Bomb": {
+      "acid": "Acid Flask",
+      "blight": "Blight Bomb",
+      "fire": "Alchemist's Fire",
+      "frost": "Frost Vial",
+      "lightning": "Bottled Lightning",
+      "thunder": "Thunderstone"
+    },
+    "Damage": {
+      "acid": "acid",
+      "bludgeoning": "bludgeoning",
+      "cold": "cold",
+      "electricity": "electricity",
+      "fire": "fire",
+      "force": "force",
+      "piercing": "piercing",
+      "slashing": "slashing",
+      "sonic": "sonic",
+      "untyped": "damage"
+    },
+    "Element": {
+      "acid": "Acid",
+      "air": "Air",
+      "cold": "Cold",
+      "electricity": "Electricity",
+      "fire": "Fire",
+      "force": "Force",
+      "kinetic": "Kinetic",
+      "mental": "Mental",
+      "poison": "Poison",
+      "sonic": "Sonic",
+      "spirit": "Spirit",
+      "vitality": "Vitality",
+      "void": "Void",
+      "water": "Water"
+    },
+    "Group": {
+      "breath": "Breaths",
+      "chain": "Chains",
+      "column": "Columns",
+      "darts": "Darts",
+      "field": "Fields",
+      "fireball": "Lobbed bursts",
+      "other": "Other",
+      "point": "Bursts",
+      "ray": "Rays"
+    },
+    "Kind": {
+      "door": "Door",
+      "wall": "Wall",
+      "window": "Window"
+    },
+    "Material": {
+      "glass": "Glass",
+      "metal": "Iron / steel",
+      "none": "Unbreakable",
+      "stone": "Stone",
+      "wood": "Wood"
+    },
+    "Notify": {
+      "Active": "Pyre {version} is active.",
+      "AttackerAndTarget": "Pyre: select an attacker and target a token (T) first.",
+      "TargetFirst": "Pyre: target a token first (T) to test this effect."
+    },
+    "Recipe": {
+      "breath": "Breath (cone or line from the caster)",
+      "chain": "Chain (leaps)",
+      "column": "Column from above",
+      "darts": "Homing darts",
+      "field": "Field (lingers)",
+      "fireball": "Lob → burst",
+      "glow": "Cast glow (no damage)",
+      "point": "Burst at a point",
+      "ray": "Ray → impact"
+    },
+    "Reveal": {
+      "Label": "Players saw a neutral strike. Replay as:",
+      "Other": "Show this to the players instead",
+      "Real": "What actually happened",
+      "crit": "Critical",
+      "hit": "Hit",
+      "miss": "Miss"
+    },
+    "Rune": {
+      "astral": "Astral",
+      "corrosive": "Corrosive",
+      "fearsome": "Fearsome",
+      "flaming": "Flaming",
+      "frost": "Frost",
+      "ghostTouch": "Ghost Touch",
+      "holy": "Holy",
+      "none": "None",
+      "shock": "Shock",
+      "speed": "Speed",
+      "thundering": "Thundering",
+      "unholy": "Unholy",
+      "wounding": "Wounding"
+    },
+    "Setting": {
+      "adaptive": {
+        "Hint": "When effects make the game stutter, draw them at a lower resolution until it runs smoothly again.",
+        "Name": "Adaptive resolution"
+      },
+      "animatePostedCards": {
+        "Hint": "Also animate spell cards that were posted to chat without being cast.",
+        "Name": "Animate posted spell cards"
+      },
+      "areaWithoutPlacing": {
+        "Hint": "Area spells wait for their area to be placed. If nobody places it and damage is rolled at targeted creatures, aim the area at them. Emanations always play around the caster at once.",
+        "Name": "Areas that are never placed"
+      },
+      "auras": {
+        "Choice": {
+          "everyone": "On every creature",
+          "friendly": "Only on my and allied tokens",
+          "off": "Off"
+        },
+        "Hint": "Lasting looks for conditions and spell effects (quickened, frightened, burning…).",
+        "Name": "Condition auras"
+      },
+      "bloom": {
+        "Hint": "How much bright effects bleed light around them. 0 turns it off.",
+        "Name": "Glow (bloom)"
+      },
+      "breakableWalls": {
+        "Hint": "After an area's damage roll, walls it reaches can break; you confirm which. Each wall's material, Hardness and HP are set in the wall's own sheet; scene defaults and rules in Pyre Studio → Scene.",
+        "Name": "Breakable walls"
+      },
+      "circleSize": {
+        "Name": "Casting circle size"
+      },
+      "debug": {
+        "Hint": "Show what Pyre decides for each attack and spell in a small box on screen, and write it to the console (F12).",
+        "Name": "Debug logging"
+      },
+      "defaultWallMaterial": {
+        "Choice": {
+          "glass": "Glass (Hardness 2, 8 HP)",
+          "metal": "Iron / steel (Hardness 18, 72 HP)",
+          "none": "Unbreakable",
+          "stone": "Stone (Hardness 14, 56 HP)",
+          "wood": "Wood (Hardness 10, 40 HP)"
+        },
+        "Hint": "For walls without their own material. Set walls one by one in Pyre Studio → Scene.",
+        "Name": "Wall material (default)"
+      },
+      "enabled": {
+        "Hint": "Turn every Pyre effect on or off on this computer.",
+        "Name": "Show effects"
+      },
+      "groundMarks": {
+        "Hint": "Scorch, frost, wet stone and cracks left on the floor for a few seconds.",
+        "Name": "Ground marks"
+      },
+      "intensity": {
+        "Hint": "Scales how bright effects are on this computer.",
+        "Name": "Brightness"
+      },
+      "markTime": {
+        "Hint": "How long scorch, frost, gashes and cracks stay on the floor.",
+        "Name": "Ground mark duration (seconds)"
+      },
+      "overrides": {
+        "Name": "Spell overrides"
+      },
+      "persistentMarks": {
+        "Hint": "Scorch, frost and acid burns stay on the map after an area spell, until you clear them in Pyre Studio → Scene.",
+        "Name": "Lasting marks"
+      },
+      "quality": {
+        "Choice": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        },
+        "Hint": "Low suits older laptops; High uses more particles and a sharper image.",
+        "Name": "Quality"
+      },
+      "screenShake": {
+        "Hint": "Shake and punch the map on heavy hits.",
+        "Name": "Screen shake and impact zoom"
+      },
+      "smokeTime": {
+        "Hint": "How long smoke and dust hang over the map and tokens. 1 is the full look; lower clears them sooner.",
+        "Name": "Smoke and dust duration"
+      },
+      "spells": {
+        "Hint": "Casts, spell attacks and templates.",
+        "Name": "Animate spells"
+      },
+      "strikeOverrides": {
+        "Name": "Attack overrides"
+      },
+      "strikes": {
+        "Hint": "Weapon, unarmed and NPC attacks.",
+        "Name": "Animate strikes"
+      },
+      "studio": {
+        "Hint": "Test effects on the current scene and change how individual spells look.",
+        "Label": "Open Pyre Studio",
+        "Name": "Pyre Studio"
+      },
+      "tokenReactions": {
+        "Hint": "Struck tokens are pushed back, squash and flash. Purely visual; tokens never move on the map.",
+        "Name": "Token reactions"
+      },
+      "underTokens": {
+        "Hint": "Scorch, floor light, smoke, dust and casting circles are drawn beneath the tokens (reload to apply).",
+        "Name": "Floor effects under tokens"
+      },
+      "wallWeakness": {
+        "Hint": "Wood takes double from fire; stone double from sonic and more from bludgeoning and acid, half from fire and cold; metal double from acid; glass double from sonic and bludgeoning.",
+        "Name": "Materials react to damage types"
+      },
+      "wallsBlock": {
+        "Hint": "Bursts, breaths and other areas stop at walls that block movement, and creatures behind them do not react.",
+        "Name": "Walls stop areas"
+      }
+    },
+    "Studio": {
+      "Attr": {
+        "StartTypingASpellName": "Start typing a spell name",
+        "StartTypingAnAttackName": "Start typing an attack name",
+        "UseAutomatic": "Use automatic"
+      },
+      "Btn": {
+        "BreakSelected": "Break selected",
+        "Cast": "Cast",
+        "ClearThisSceneSMarks": "Clear this scene's marks",
+        "Overrides": "Overrides",
+        "Play": "Play",
+        "RestoreBrokenWalls": "Restore broken walls ({n})",
+        "Save": "Save",
+        "SaveOverride": "Save override",
+        "Scene": "Scene",
+        "SetMaterial": "Set material",
+        "Strike": "Strike",
+        "TestOnTheMap": "Test on the map"
+      },
+      "Check": {
+        "CustomColours": "Custom colours",
+        "FlurryUnarmed": "Flurry (unarmed)",
+        "GreaterRunes": "Greater runes",
+        "NoAnimation": "No animation"
+      },
+      "CustomColours": "custom colours",
+      "Field": {
+        "Attack": "Attack",
+        "Bomb": "Bomb",
+        "Core": "Core",
+        "Delivery": "Delivery",
+        "Element": "Element",
+        "ExtraRune": "Extra rune",
+        "Glow": "Glow",
+        "Intent": "Intent",
+        "LooksLike": "Looks like",
+        "Material": "Material",
+        "Potency": "Potency",
+        "Result": "Result",
+        "Rune": "Rune",
+        "SecondRune": "Second rune",
+        "Spell": "Spell",
+        "Striking": "Striking",
+        "ThisSceneSDefaultMaterial": "This scene's default material",
+        "Tradition": "Tradition",
+        "Weapon": "Weapon"
+      },
+      "Msg": {
+        "Automatic": "Back to automatic.",
+        "Broken": "{n} wall(s) broken. Restore them here whenever you like.",
+        "MarksCleared": "Marks cleared.",
+        "MaterialSet": "{n} wall(s) are now {name}.",
+        "NoneBroken": "No broken walls in this scene.",
+        "NothingToChange": "Nothing to change: pick a recipe, an element, colours or Off.",
+        "PickAttack": "Type or pick an attack name first.",
+        "PickSpell": "Type or pick a spell name first.",
+        "Restored": "{n} wall(s) restored.",
+        "Saved": "Saved. {name} now plays your version.",
+        "SavedAttack": "Saved. {name} now plays as {look}.",
+        "SceneMaterial": "This scene's walls are now {name} unless set otherwise.",
+        "SelectToken": "Select the token that casts or attacks first.",
+        "SelectWalls": "Select walls on the Walls layer first.",
+        "TargetToken": "Target a token (press T over it) to strike at.",
+        "WeaknessOff": "Every damage type counts the same against walls.",
+        "WeaknessOn": "Materials react to damage types."
+      },
+      "NoAnimation": "No animation",
+      "Opt": {
+        "AutoByTargetSSide": "Auto (by target's side)",
+        "Automatic": "Automatic",
+        "Blessing": "Blessing",
+        "Critical": "Critical",
+        "FromTheItem": "From the item",
+        "Greater": "Greater",
+        "Hex": "Hex",
+        "HiddenPlayerView": "Hidden (player view)",
+        "Hit": "Hit",
+        "Major": "Major",
+        "Metal": "Metal",
+        "Miss": "Miss",
+        "None": "None",
+        "Self": "Self",
+        "Stone": "Stone",
+        "Striking": "Striking",
+        "Teleport": "Teleport",
+        "Wood": "Wood"
+      },
+      "Ov": {
+        "Add": "Add or change an override",
+        "Attacks": "Attacks",
+        "AttacksHint": "Pyre reads the weapon group, then the attack's name (Claw, Jaws, Longsword, Garra…). Pick a look for any attack it gets wrong. Applies to every attack with that name.",
+        "Current": "Current overrides",
+        "DarkNote": "A very dark core switches to shadow rendering, with the glow on the rim.",
+        "Hint": "Pyre reads each spell's data on its own. Use an override when a spell should look different: an enemy's black lightning, an ice fireball, or no animation at all.",
+        "None": "No overrides yet. Every spell plays what its data describes."
+      },
+      "Scene": {
+        "MarkCount": "This scene has <b>{n}</b> mark(s).",
+        "Marks": "Lasting marks",
+        "MarksOff": "Off: turn on <b>Lasting marks</b> in the module settings to keep scorch, frost and acid burns.",
+        "MarksOn": "On: area spells leave scorch, frost and acid burns.",
+        "PerWall": "Each wall's material, Hardness and HP: double-click the wall (its sheet has a Pyre section, with \"apply to the selected walls\"). Or select walls here and give them a material.",
+        "RubbleKept": "Rubble from broken walls is always kept.",
+        "Selected": "<b>{n}</b> selected.",
+        "Walls": "Breakable walls",
+        "WallsHow": "After an area's damage roll, walls it reaches take the damage minus their Hardness, and you choose which break.",
+        "WallsOff": "Off: turn on <b>Breakable walls</b> in the module settings.",
+        "WallsOn": "On.",
+        "Weakness": "Materials react to damage types (wood ×2 vs fire, stone ×2 vs sonic…)"
+      },
+      "Test": {
+        "Glow": "Cast glow",
+        "Hint": "Select the token that acts, then target others with <kbd>T</kbd>. Tests play only on your screen.",
+        "Spells": "Spell effects",
+        "SpellsNote": "Areas aim at your first target, or straight ahead without one.",
+        "Strikes": "Strikes"
+      },
+      "Title": "Pyre Studio"
+    },
+    "Tradition": {
+      "arcane": "Arcane",
+      "divine": "Divine",
+      "occult": "Occult",
+      "primal": "Primal"
+    },
+    "Walls": {
+      "AlsoApply": {
+        "Many": "Also apply to the other {n} selected walls",
+        "One": "Also apply to the other selected wall"
+      },
+      "Apply": "Apply",
+      "Breaks": "breaks",
+      "Broken": {
+        "Many": "{n} walls broken.",
+        "One": "1 wall broken."
+      },
+      "CurrentHp": "Current HP",
+      "Dealt": "{name} dealt <b>{total}</b> damage. Tick the walls that break:",
+      "DialogHint": "Unticked walls keep the damage. Broken walls can be restored from the chat card, the Walls controls or Pyre Studio.",
+      "DialogTitle": "Pyre: walls hit",
+      "Hardness": "Hardness",
+      "Heal": "Back to full HP",
+      "Ignore": "Ignore",
+      "LeftAt": "left at {hp}/{max} HP",
+      "Material": "Material",
+      "MaterialStats": "{name} (Hardness {hardness}, {hp} HP)",
+      "MaxHp": "Max HP",
+      "NoneBroken": "Pyre: no broken walls in this scene.",
+      "Restore": "Restore",
+      "RestoreTool": "Pyre: restore broken walls",
+      "Restored": {
+        "Many": "Pyre: {n} walls restored.",
+        "One": "Pyre: 1 wall restored."
+      },
+      "RestoredBtn": "Restored",
+      "Row": "{dealt} damage (Hardness {hardness})",
+      "SceneDefault": "Scene default ({name})",
+      "Section": "Pyre: breakable wall",
+      "SectionHint": "Empty fields use the material. Unbreakable ignores the numbers. Saves as you change it.",
+      "Standing": "Already standing",
+      "TheBlast": "The blast",
+      "Updated": {
+        "Many": "Pyre: {n} walls updated.",
+        "One": "Pyre: wall updated."
+      }
+    },
+    "Weapon": {
+      "axe": "Axe (heavy chop, gash)",
+      "bomb": "Alchemical bomb",
+      "claw": "Claws (rake)",
+      "crossbow": "Crossbow (fast bolt)",
+      "dagger": "Dagger / knife (two quick stabs)",
+      "dart": "Thrown (spinning)",
+      "firearm": "Firearm (muzzle flash, smoke)",
+      "fist": "Unarmed (punch, kick)",
+      "flail": "Flail / whip (lash and crack)",
+      "jaws": "Jaws (bite)",
+      "longbow": "Bow (arrow)",
+      "longsword": "Sword (arc of steel)",
+      "pick": "Pick (star crack)",
+      "polearm": "Polearm (long reap, pulls)",
+      "shield": "Shield (bash, pushes back)",
+      "sling": "Sling (stone)",
+      "spear": "Spear (long thrust)",
+      "tail": "Tail / wing (wide sweep)",
+      "warhammer": "Hammer / club / mace (shockwave)"
+    }
+  }
 }
