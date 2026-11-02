@@ -37,10 +37,11 @@ export function registerSettings() {
   });
 
   world("wallsBlock", { name: "Walls stop areas", hint: "Bursts, breaths and other areas stop at walls that block movement, and creatures behind them do not react.", type: Boolean, default: true });
-  world("breakableWalls", { name: "Breakable walls", hint: "After an area's damage roll, walls it reaches take the damage minus their Hardness. You confirm which ones break; Pyre Studio restores them.", type: Boolean, default: false });
-  world("defaultWallMaterial", { name: "Wall material (default)", hint: "For walls without their own material. Set walls one by one in Pyre Studio → Scene.", type: String,
+  world("breakableWalls", { name: "Breakable walls", hint: "After an area's damage roll, walls it reaches can break; you confirm which. Each wall's material, Hardness and HP are set in the wall's own sheet; scene defaults and rules in Pyre Studio → Scene.", type: Boolean, default: false });
+  // Wall rules live with the walls: per wall in its sheet, per scene and rules in Pyre Studio → Scene
+  world("defaultWallMaterial", { config: false, name: "Wall material (default)", hint: "For walls without their own material. Set walls one by one in Pyre Studio → Scene.", type: String,
     choices: { stone: "Stone (Hardness 14, 56 HP)", wood: "Wood (Hardness 10, 40 HP)", metal: "Iron / steel (Hardness 18, 72 HP)", glass: "Glass (Hardness 2, 8 HP)", none: "Unbreakable" }, default: "stone" });
-  world("wallWeakness", { name: "Materials react to damage types", hint: "Wood takes double from fire; stone double from sonic and more from bludgeoning and acid, half from fire and cold; metal double from acid; glass double from sonic and bludgeoning.", type: Boolean, default: true });
+  world("wallWeakness", { config: false, name: "Materials react to damage types", hint: "Wood takes double from fire; stone double from sonic and more from bludgeoning and acid, half from fire and cold; metal double from acid; glass double from sonic and bludgeoning.", type: Boolean, default: true });
   world("persistentMarks", { name: "Lasting marks", hint: "Scorch, frost and acid burns stay on the map after an area spell, until you clear them in Pyre Studio → Scene.", type: Boolean, default: false,
     onChange: () => Director.get().scars.refresh() });
   world("spells", { name: "Animate spells", hint: "Casts, spell attacks and templates.", type: Boolean, default: true });

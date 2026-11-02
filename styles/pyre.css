@@ -65,3 +65,7 @@
 .pyre-card p { margin: 0 0 6px; }
 .pyre-card .pyre-restore-btn { width: 100%; }
 .pyre-wall-material .hint { flex: 0 0 100%; }
+/* Pyre section in the wall sheet */
+.pyre-wall-section { margin: 8px 0; padding: 6px 10px 8px; border: 1px solid rgba(232, 116, 59, 0.45); border-radius: 6px; }
+.pyre-wall-section legend { padding: 0 4px; font-weight: 600; }
+.pyre-wall-section .form-fields button { flex: 0 0 auto; width: auto; padding: 0 8px; }

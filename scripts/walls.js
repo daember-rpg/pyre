@@ -36,15 +36,27 @@ export const WEAKNESS = {
 const TYPE_PT = { fire: "fogo", cold: "frio", acid: "ácido", electricity: "eletricidade", sonic: "sônico", force: "força", bludgeoning: "concussão",
   piercing: "perfuração", slashing: "corte", untyped: "dano" };
 
+const flag = (doc, k) => doc?.getFlag?.(MODULE_ID, k) ?? doc?.flags?.[MODULE_ID]?.[k];
+
+/** The scene's own default material (Pyre Studio → Scene); walls without a material of their own use it. */
+export function sceneMaterial(scene = canvas?.scene) {
+  const m = scene?.getFlag?.(MODULE_ID, "wallMaterial") ?? scene?.flags?.[MODULE_ID]?.wallMaterial;
+  return MATERIALS[m] ? m : (MATERIALS[setting("defaultWallMaterial", "stone")] ? setting("defaultWallMaterial", "stone") : "stone");
+}
 export function wallMaterial(doc) {
-  const m = doc?.getFlag?.(MODULE_ID, "material") ?? doc?.flags?.[MODULE_ID]?.material;
-  return MATERIALS[m] ? m : setting("defaultWallMaterial", "stone");
+  const m = flag(doc, "material");
+  return MATERIALS[m] ? m : sceneMaterial(doc?.parent ?? canvas?.scene);
 }
-export function wallHP(doc) {
-  const M = MATERIALS[wallMaterial(doc)];
-  const hp = doc?.getFlag?.(MODULE_ID, "hp") ?? doc?.flags?.[MODULE_ID]?.hp;
-  return Number.isFinite(hp) ? hp : M.hp;
+/** Hardness, maximum and current HP: the wall's own numbers when it has them, otherwise its material's. */
+export function wallStats(doc) {
+  const mat = wallMaterial(doc), M = MATERIALS[mat];
+  const own = (k) => { const v = Number(flag(doc, k)); return Number.isFinite(v) && flag(doc, k) !== null && flag(doc, k) !== undefined && flag(doc, k) !== "" ? v : null; };
+  const hardness = own("hardness") ?? M.hardness;
+  const maxHp = own("maxHp") ?? M.hp;
+  const hp = Math.min(own("hp") ?? maxHp, maxHp);
+  return { mat, M, name: M.name, hardness, maxHp, hp, unbreakable: !Number.isFinite(hardness) || !Number.isFinite(maxHp), custom: own("hardness") !== null || own("maxHp") !== null };
 }
+export function wallHP(doc) { return wallStats(doc).hp; }
 const isBroken = (doc) => !!(doc?.getFlag?.(MODULE_ID, "broken") ?? doc?.flags?.[MODULE_ID]?.broken);
 const blocks = (doc) => doc.move !== 0 && !(doc.door > 0 && doc.ds === 1);
 
@@ -139,10 +151,11 @@ export async function onDamageRoll(message, area) {
   const reached = wallsReached(area.shape);
   if (!reached.length) return;
   const rows = reached.map((d) => {
-    const mat = wallMaterial(d), M = MATERIALS[mat], hp = wallHP(d);
+    const S = wallStats(d), mat = S.mat;
     const eff = effective(byType, mat);
-    const dealt = Math.max(0, eff.dmg - M.hardness);
-    return { d, mat, M, hp, eff, dealt, left: hp - dealt, breaks: Number.isFinite(hp) && hp - dealt <= 0 };
+    const dealt = Math.max(0, eff.dmg - S.hardness);
+    const M = { name: S.name, hardness: S.hardness, hp: S.maxHp };
+    return { d, mat, M, hp: S.hp, eff, dealt, left: S.hp - dealt, breaks: !S.unbreakable && S.hp - dealt <= 0 };
   }).filter((r) => r.dealt > 0 && Number.isFinite(r.hp));
   report("Walls", [`${total} damage reaches ${reached.length} wall(s)`, ...rows.map((r) => `${r.M.name}: ${r.eff.dmg}${r.eff.notes.length ? " (" + r.eff.notes.join(", ") + ")" : ""} − Hardness ${r.M.hardness} = ${r.dealt} → ${Math.max(0, r.left)}/${r.M.hp}`)]);
   if (!rows.length) return;
@@ -243,30 +256,62 @@ export async function setMaterial(docs, mat) {
 
 export function brokenCount() { return (canvas?.walls?.placeables ?? []).filter((w) => isBroken(w.document)).length; }
 
-/** A "Material (Pyre)" field in the wall's own configuration sheet. Saves the moment it changes. */
+/**
+ * The wall's own Pyre section in its configuration sheet: material, Hardness, HP (maximum and current).
+ * Saves the moment a field changes. With "apply to the selected walls" ticked, the change goes to every
+ * selected wall at once.
+ */
 export function injectWallConfig(app, html) {
   if (!game.user.isGM) return;
   const root = html instanceof HTMLElement ? html : html?.[0];
   const doc = app.document ?? app.object;
-  if (!root || !doc || root.querySelector(".pyre-wall-material")) return;
-  const cur = doc.getFlag(MODULE_ID, "material") ?? "";
-  const def = MATERIALS[setting("defaultWallMaterial", "stone")]?.name ?? "";
-  const group = document.createElement("div");
-  group.className = "form-group pyre-wall-material";
-  const opts = [`<option value="">Padrão da cena (${def})</option>`]
-    .concat(Object.entries(MATERIALS).map(([id, m]) => `<option value="${id}" ${id === cur ? "selected" : ""}>${m.name}${Number.isFinite(m.hp) ? ` — Dureza ${m.hardness}, ${m.hp} PV` : ""}</option>`));
-  group.innerHTML = `<label>Material (Pyre)</label><div class="form-fields"><select data-pyre="material">${opts.join("")}</select></div>
-    <p class="hint">Usado pelas paredes que quebram. Salva na hora.</p>`;
-  const sel = group.querySelector("select");
-  sel.addEventListener("change", async (ev) => {
-    ev.stopPropagation();
-    if (sel.value) await doc.setFlag(MODULE_ID, "material", sel.value);
-    else await doc.unsetFlag(MODULE_ID, "material");
-    await doc.unsetFlag?.(MODULE_ID, "hp");
-  });
-  const anchor = root.querySelector("form .form-group, .form-group");
-  if (anchor?.parentElement) anchor.parentElement.insertBefore(group, anchor);
-  else (root.querySelector("form") ?? root).prepend(group);
+  if (!root || !doc || root.querySelector(".pyre-wall-section")) return;
+  const S = wallStats(doc);
+  const own = (k) => { const v = doc.getFlag(MODULE_ID, k); return v === undefined || v === null ? "" : v; };
+  const curMat = doc.getFlag(MODULE_ID, "material") ?? "";
+  const sceneMat = MATERIALS[sceneMaterial(doc.parent)];
+  const M = MATERIALS[S.mat];
+  const others = (canvas.walls?.controlled ?? []).filter((w) => w.document.id !== doc.id).length;
+  const box = document.createElement("fieldset");
+  box.className = "pyre-wall-section";
+  const opts = [`<option value="">Padrão da cena (${sceneMat.name})</option>`]
+    .concat(Object.entries(MATERIALS).map(([id, m]) => `<option value="${id}" ${id === curMat ? "selected" : ""}>${m.name}${Number.isFinite(m.hp) ? ` (Dureza ${m.hardness}, ${m.hp} PV)` : ""}</option>`));
+  const num = (v) => (Number.isFinite(v) ? v : "∞");
+  box.innerHTML = `<legend><i class="fa-solid fa-dungeon"></i> Pyre: parede quebrável</legend>
+    <div class="form-group"><label>Material</label><div class="form-fields"><select data-pyre="material">${opts.join("")}</select></div></div>
+    <div class="form-group"><label>Dureza</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hardness" value="${own("hardness")}" placeholder="${num(M.hardness)}"></div></div>
+    <div class="form-group"><label>PV máximos</label><div class="form-fields"><input type="number" min="1" step="1" data-pyre="maxHp" value="${own("maxHp")}" placeholder="${num(M.hp)}"></div></div>
+    <div class="form-group"><label>PV atuais</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hp" value="${own("hp")}" placeholder="${num(S.maxHp)}">
+      <button type="button" data-pyre="heal" title="Voltar aos PV máximos"><i class="fa-solid fa-heart"></i></button></div></div>
+    ${others ? `<div class="form-group"><label class="checkbox"><input type="checkbox" data-pyre="batch"> Aplicar também às outras ${others} parede(s) selecionada(s)</label></div>` : ""}
+    <p class="hint">Campos vazios usam o material. Inquebrável ignora os números. Salva na hora.</p>`;
+  const batch = () => box.querySelector("[data-pyre=batch]")?.checked;
+  const targets = () => [doc, ...(batch() ? canvas.walls.controlled.map((w) => w.document).filter((d) => d.id !== doc.id) : [])];
+  const save = async (key, raw) => {
+    const value = key === "material" ? raw : raw === "" ? null : Math.max(0, Math.round(Number(raw)));
+    const updates = targets().map((d) => {
+      const u = { _id: d.id };
+      if (value === null || value === "") u[`flags.${MODULE_ID}.-=${key}`] = null; else u[`flags.${MODULE_ID}.${key}`] = value;
+      // A new material or maximum starts the wall at full health
+      if (key === "material" || key === "maxHp") u[`flags.${MODULE_ID}.-=hp`] = null;
+      return u;
+    });
+    await canvas.scene.updateEmbeddedDocuments("Wall", updates);
+    const n = updates.length;
+    ui.notifications?.info(`Pyre: ${n > 1 ? `${n} paredes atualizadas` : "parede atualizada"}.`);
+  };
+  for (const el of box.querySelectorAll("[data-pyre]")) {
+    const key = el.dataset.pyre;
+    if (key === "batch") continue;
+    if (key === "heal") { el.addEventListener("click", (ev) => { ev.preventDefault(); box.querySelector("[data-pyre=hp]").value = ""; save("hp", ""); }); continue; }
+    // Keep these fields out of Foundry's own form submit; Pyre saves them itself
+    el.removeAttribute("name");
+    el.addEventListener("change", (ev) => { ev.stopPropagation(); save(key, el.value); });
+    el.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); el.blur(); } });
+  }
+  const form = root.querySelector("form") ?? root;
+  const footer = form.querySelector("footer, .form-footer, button[type=submit]");
+  if (footer?.parentElement === form) form.insertBefore(box, footer); else form.appendChild(box);
   app.setPosition?.({ height: "auto" });
 }
 

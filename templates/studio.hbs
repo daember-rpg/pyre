@@ -118,8 +118,12 @@
     {{#if (eq tab "scene")}}
     <fieldset class="ps-card">
       <legend>Breakable walls</legend>
-      <p class="ps-note">{{#if wallsOn}}On.{{else}}Off: turn on <b>Breakable walls</b> in the module settings.{{/if}} After an area's damage roll, walls it reaches take the damage minus their Hardness, and you choose which break. Walls without a material use the default (<b>{{defaultMat}}</b>).</p>
-      <p class="ps-note">On the Walls layer, select walls, then give them a material. <b>{{selectedWalls}}</b> selected.</p>
+      <p class="ps-note">{{#if wallsOn}}On.{{else}}Off: turn on <b>Breakable walls</b> in the module settings.{{/if}} After an area's damage roll, walls it reaches take the damage minus their Hardness, and you choose which break. </p>
+      <div class="ps-grid">
+        <label>This scene's default material<select name="sceneMat">{{#each materials}}<option value="{{id}}" {{#if (eq id ../sceneMat)}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label class="ps-check"><input type="checkbox" name="weakness" {{#if weaknessOn}}checked{{/if}}> Materials react to damage types (wood ×2 vs fire, stone ×2 vs sonic…)</label>
+      </div>
+      <p class="ps-note">Each wall's material, Hardness and HP: double-click the wall (its sheet has a Pyre section, with "apply to the selected walls"). Or select walls here and give them a material. <b>{{selectedWalls}}</b> selected.</p>
       <div class="ps-row">
         <select name="wallMat">{{#each materials}}<option value="{{id}}">{{label}}</option>{{/each}}</select>
         <button type="button" class="ps-play" data-action="setWallMaterial"><i class="fa-solid fa-trowel-bricks"></i> Set material</button>

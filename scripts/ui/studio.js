@@ -4,7 +4,7 @@ import { STANDARD } from "../data/presets.js";
 import { RUNES, BOMBS } from "../data/strikes.js";
 import { TRADITIONS } from "../data/glow.js";
 import { slugOf } from "../resolver.js";
-import { MATERIALS, setMaterial, restoreWalls, breakWalls, brokenCount } from "../walls.js";
+import { MATERIALS, setMaterial, restoreWalls, breakWalls, brokenCount, sceneMaterial } from "../walls.js";
 import { clearScars } from "../core/scars.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -89,12 +89,12 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
       const g = { breath: "Breaths", fireball: "Lobbed bursts", point: "Bursts", column: "Columns", field: "Fields", ray: "Rays", darts: "Darts", chain: "Chains" }[p.recipe] ?? "Other";
       (groups[g] ??= []).push({ id: p.id, name: p.name });
     }
-    const mat = game.settings.get(MODULE_ID, "defaultWallMaterial");
     return {
       tab: this.tabName,
       wallsOn: game.settings.get(MODULE_ID, "breakableWalls"),
       marksOn: game.settings.get(MODULE_ID, "persistentMarks"),
-      defaultMat: MATERIALS[mat]?.name ?? mat,
+      sceneMat: canvas?.scene ? sceneMaterial() : "stone",
+      weaknessOn: game.settings.get(MODULE_ID, "wallWeakness"),
       materials: Object.entries(MATERIALS).map(([id, m]) => ({ id, label: Number.isFinite(m.hp) ? `${m.name} (Dureza ${m.hardness}, ${m.hp} PV)` : m.name })),
       selectedWalls: canvas?.walls?.controlled?.length ?? 0,
       brokenWalls: canvas?.ready ? brokenCount() : 0,
@@ -118,6 +118,21 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
         swatch: o.color ? `linear-gradient(90deg, ${o.color[0]}, ${o.color[1]})` : null,
       })).sort((a, b) => a.name.localeCompare(b.name)),
     };
+  }
+
+  /** Scene tab: the scene's default material and the damage-type rule save as soon as they change. */
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    const sel = this.element.querySelector("[name=sceneMat]");
+    sel?.addEventListener("change", async () => {
+      await canvas.scene?.setFlag(MODULE_ID, "wallMaterial", sel.value);
+      this.#msg(`This scene's walls are now ${MATERIALS[sel.value].name} unless set otherwise.`);
+    });
+    const wk = this.element.querySelector("[name=weakness]");
+    wk?.addEventListener("change", async () => {
+      await game.settings.set(MODULE_ID, "wallWeakness", wk.checked);
+      this.#msg(wk.checked ? "Materials react to damage types." : "Every damage type counts the same against walls.");
+    });
   }
 
   #val(sel) { return this.element.querySelector(sel)?.value ?? ""; }

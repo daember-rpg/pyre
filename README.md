@@ -42,6 +42,11 @@ World: animate spells, animate strikes, animate posted (not cast) spell cards, a
 
 With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
 
+## Changes in 0.5.3
+
+* Each wall's sheet (double-click a wall) has a **Pyre: parede quebrável** section: material, Hardness, maximum HP and current HP (with a button back to full). Empty fields use the material's numbers. Tick **apply to the other selected walls** to set many walls at once. Saves the moment a field changes.
+* The module settings only turn breakable walls on or off. The scene's default material and the "materials react to damage types" rule moved to Pyre Studio → Scene; the default material is now per scene.
+
 ## Changes in 0.5.2
 
 * Materials react to damage types (world setting *Materials react to damage types*, on by default). Each part of the damage is multiplied before Hardness:
