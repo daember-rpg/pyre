@@ -122,6 +122,7 @@ export class ScarLayer {
     const size = canvas.dimensions.size;
     const pal = sc.mat === "wood" && sc.cause === "fire" ? [[34, 26, 20], [58, 42, 30], [22, 17, 13]]
       : sc.cause === "cold" ? [[170, 190, 205], [210, 225, 235], [130, 150, 165]]
+      : sc.mat === "glass" ? [[150, 185, 200], [210, 235, 245], [110, 140, 155]]
       : sc.mat === "wood" ? [[96, 66, 38], [122, 86, 50], [70, 48, 28]] : sc.mat === "metal" ? [[90, 94, 100], [120, 124, 130], [60, 62, 68]] : [[110, 104, 96], [138, 130, 120], [80, 75, 70]];
     // Dust band
     g.lineCap = "round";
@@ -133,18 +134,27 @@ export class ScarLayer {
       gr.addColorStop(0, "rgba(125,115,100,0.22)"); gr.addColorStop(1, "rgba(125,115,100,0)");
       g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
     }
-    const n = Math.round(L / size * 26);
+    const n = Math.round(L / size * (sc.mat === "glass" ? 70 : sc.kind === "door" ? 12 : 26));
     for (let i = 0; i < n; i++) {
       const t = rnd(), mag = size * (0.1 + 0.75 * Math.pow(rnd(), 1.5));
       const sgn = sc.side ? (rnd() < 0.82 ? sc.side : -sc.side) : (rnd() < 0.5 ? -1 : 1);
       const off = sgn * mag * (sc.side ? 1.15 : 0.7);
       const x = x1 + ux * L * t + nx * off, y = y1 + uy * L * t + ny * off;
-      const r = size * (0.04 + Math.pow(rnd(), 2.2) * 0.13);
+      const r = size * (sc.mat === "glass" ? 0.012 + Math.pow(rnd(), 2) * 0.04 : sc.kind === "door" ? 0.07 + Math.pow(rnd(), 2) * 0.12 : 0.04 + Math.pow(rnd(), 2.2) * 0.13);
       const c = pal[Math.floor(rnd() * pal.length)];
-      const sides = sc.mat === "wood" ? 4 : 5 + Math.floor(rnd() * 3), rot = rnd() * Math.PI;
-      const stretch = sc.mat === "wood" ? 2.6 : 1;
-      const jag = Array.from({ length: sides }, () => 0.75 + 0.35 * rnd());
-      const poly = (dx, dy, k) => { g.beginPath(); for (let j = 0; j < sides; j++) { const a = j / sides * Math.PI * 2, rr = r * k * jag[j];
+      const sides = sc.mat === "glass" ? 3 : sc.mat === "wood" ? 4 : 5 + Math.floor(rnd() * 3), rot = rnd() * Math.PI;
+      const stretch = sc.kind === "door" ? 4 : sc.mat === "wood" ? 2.6 : sc.mat === "glass" ? 1.6 : 1;
+      const jag = Array.from({ length: Math.max(sides, 4) }, () => 0.75 + 0.35 * rnd());
+      const board = sc.mat === "wood";
+      const bl = r * stretch * 0.9, bw = r * 0.32, cr = Math.cos(rot), sr = Math.sin(rot);
+      const poly = (dx, dy, k) => { g.beginPath();
+        if (board) {
+          // A plank: long and narrow, with torn ends
+          const pts = [[-bl * jag[0], -bw], [bl * jag[1], -bw], [bl * jag[2] * 0.92, 0], [bl * jag[3], bw], [-bl * jag[0] * 0.95, bw], [-bl * jag[1] * 0.9, 0]];
+          for (const [px, py] of pts) g.lineTo(x + dx + (px * cr - py * sr) * k, y + dy + (px * sr + py * cr) * k);
+          g.closePath(); return;
+        }
+        for (let j = 0; j < sides; j++) { const a = j / sides * Math.PI * 2, rr = r * k * jag[j];
         const px = Math.cos(a) * rr * stretch, py = Math.sin(a) * rr; g.lineTo(x + dx + px * Math.cos(rot) - py * Math.sin(rot), y + dy + px * Math.sin(rot) + py * Math.cos(rot)); } g.closePath(); };
       g.fillStyle = "rgba(0,0,0,0.35)"; poly(r * 0.25, r * 0.35, 1.05); g.fill();
       g.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; poly(0, 0, 1); g.fill();

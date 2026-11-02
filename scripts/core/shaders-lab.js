@@ -952,7 +952,7 @@ void main(){
 
 export const WALL_FS = `
 uniform sampler2D uNoise;
-uniform float uMode, uWood, uHot;
+uniform float uMode, uWood, uHot, uGlass;
 uniform vec3 uPalA, uPalB, uDust, uHotCol;
 varying vec2 vUv; varying vec4 vSeed; varying float vAlpha; varying float vHop; varying float vT;
 void main(){
@@ -973,6 +973,13 @@ void main(){
   float edge = 0.6 + 0.32*fract(sin(seg*12.9898 + vSeed.y*78.233)*43758.5453);
   float r = length(q);
   float body = 1.0 - smoothstep(edge - 0.06, edge, r);
+  if(uWood > 0.5){
+    // Planks and splinters: long boards with torn, uneven ends
+    float tear = 0.78 + 0.18*fract(sin(floor(p.y*6.0 + vSeed.z*20.0)*12.9898 + vSeed.y*78.2)*43758.5);
+    float bx = abs(p.x)/tear, by = abs(p.y)/0.26;
+    r = max(bx, by)*edge;
+    body = 1.0 - smoothstep(0.92, 1.0, max(bx, by));
+  }
   vec2 sp = q - vec2(0.18, -0.26)*(0.4 + vHop);
   float shadow = (1.0 - smoothstep(edge - 0.2, edge + 0.1, length(sp)))*(1.0 - body)*0.45;
   vec2 nrm = normalize(q + 0.001);
@@ -983,8 +990,11 @@ void main(){
   // What broke it shows on the pieces: burning edges, corrosion, frost or crackling sparks, fading as they settle
   float rim = smoothstep(edge - 0.32, edge - 0.02, r)*body;
   vec3 hot = uHotCol*uHot*(rim*(0.6 + 0.8*grain))*(1.0 - 0.8*vT);
-  vec3 c = col*body + hot;
-  gl_FragColor = vec4(c*vAlpha, a);
+  // Glass: see-through shards that catch the light as they turn
+  float glint = uGlass*pow(max(0.0, sin(vSeed.x*40.0 + vT*26.0 + q.x*3.0)), 14.0)*body;
+  float see = mix(1.0, 0.55, uGlass);
+  vec3 c = col*body + hot + vec3(1.0)*glint*1.6;
+  gl_FragColor = vec4(c*vAlpha, a*see);
 }`;
 
 /** The wall line itself: jagged cracks that flash before it breaks, or a soft seam of light as it closes again. */

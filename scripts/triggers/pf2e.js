@@ -389,7 +389,7 @@ function addRestoreButton(message, html) {
   btn.addEventListener("click", async () => {
     btn.disabled = true;
     const n = await restoreWalls(ids);
-    btn.innerHTML = n ? '<i class="fa-solid fa-check"></i> Restauradas' : '<i class="fa-solid fa-check"></i> Já estavam de pé';
+    btn.innerHTML = n ? '<i class="fa-solid fa-check"></i> Restored' : '<i class="fa-solid fa-check"></i> Already standing';
   });
 }
 

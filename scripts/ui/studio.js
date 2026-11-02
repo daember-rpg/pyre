@@ -95,7 +95,7 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
       marksOn: game.settings.get(MODULE_ID, "persistentMarks"),
       sceneMat: canvas?.scene ? sceneMaterial() : "stone",
       weaknessOn: game.settings.get(MODULE_ID, "wallWeakness"),
-      materials: Object.entries(MATERIALS).map(([id, m]) => ({ id, label: Number.isFinite(m.hp) ? `${m.name} (Dureza ${m.hardness}, ${m.hp} PV)` : m.name })),
+      materials: Object.entries(MATERIALS).map(([id, m]) => ({ id, label: Number.isFinite(m.hp) ? `${m.name} (Hardness ${m.hardness}, ${m.hp} HP)` : m.name })),
       selectedWalls: canvas?.walls?.controlled?.length ?? 0,
       brokenWalls: canvas?.ready ? brokenCount() : 0,
       marks: (canvas?.scene?.getFlag(MODULE_ID, "scars") ?? []).length,

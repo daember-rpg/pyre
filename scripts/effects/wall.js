@@ -36,15 +36,19 @@ export class WallEffect {
     this.dur = req.rebuild ? 1.5 : 2.8;
     const len = req.a.distanceTo(req.b);
     const C = CAUSE[req.cause] ?? null;
+    // A door bursts into a few long planks, a window into a spray of small shards, a wall into chunks
+    const glass = req.material === "glass", door = req.kind === "door";
+    const size = door ? 1.7 : glass ? 0.5 : req.material === "wood" ? 1.1 : 1.25;
+    const density = door ? 4 : glass ? 16 : 9, dustK = glass ? 0.6 : door ? 2 : 3.2;
     const pal = (C && (C[req.material] ?? C.all)) ?? PAL[req.material] ?? PAL.stone, q = QK[setting("quality", "high")] ?? 1;
     const U = (mode) => ({ uA: { value: req.a.clone() }, uB: { value: req.b.clone() }, uT: { value: 0 }, uSide: { value: req.side ?? 0 }, uMode: { value: mode },
-      uRev: { value: req.rebuild ? 1 : 0 }, uSize: { value: req.material === "wood" ? 1.1 : 1.25 }, uFade: { value: 1 }, uNoise: { value: overlay.noise },
+      uRev: { value: req.rebuild ? 1 : 0 }, uSize: { value: size }, uFade: { value: 1 }, uNoise: { value: overlay.noise }, uGlass: { value: glass ? 1 : 0 },
       uWood: { value: req.material === "wood" ? 1 : 0 }, uPalA: { value: new THREE.Vector3(...pal.a) }, uPalB: { value: new THREE.Vector3(...pal.b) },
       uDust: { value: new THREE.Vector3(...pal.dust) }, uHot: { value: C ? C.k : 0 }, uHotCol: { value: new THREE.Vector3(...(C?.hot ?? [0, 0, 0])) } });
     this.chunks = particles(this.group, { max: 1200, seed: 91, vs: GL.WALL_VS, fs: GL.WALL_FS, uniforms: U(0), blend: "premult", order: 3 });
     this.dust = particles(this.under, { max: 500, seed: 92, vs: GL.WALL_VS, fs: GL.WALL_FS, uniforms: U(1), blend: "premult", order: 1 });
-    this.chunks.geo.instanceCount = Math.min(1200, Math.round(len * 9 * q) + 10);
-    this.dust.geo.instanceCount = Math.min(500, Math.round(len * 3.2 * q) + 6);
+    this.chunks.geo.instanceCount = Math.min(1200, Math.round(len * density * q) + 8);
+    this.dust.geo.instanceCount = Math.min(500, Math.round(len * dustK * q) + 3);
     // The wall line: cracks before it goes, a seam of light when it closes again
     this.seam = quad(this.group, GL.QUAD_VS, GL.SEAM_FS, { uNoise: { value: overlay.noise }, uT: { value: 0 }, uRev: { value: req.rebuild ? 1 : 0 }, uLen: { value: len },
       uCol: { value: new THREE.Vector3(...(req.rebuild ? [1, 0.9, 0.7] : [1, 0.75, 0.45])) } }, { order: 4, visible: true });

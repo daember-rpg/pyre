@@ -42,6 +42,13 @@ World: animate spells, animate strikes, animate posted (not cast) spell cards, a
 
 With both active, Conjure handles the summoning and Pyre draws it. Conjure 0.4.1 stops its own effect when Pyre is active, and keeps working on its own without Pyre.
 
+## Changes in 0.6.0
+
+* **Breakable doors and windows.** Closed doors (including secret and locked ones) and windows (walls that block movement but let sight through, Foundry's window preset) break like walls. Doors default to wood and windows to glass unless you give them a material.
+  * A door bursts into long planks and leaves boards on the floor; a broken door is just a hole (no door control) until restored, when it comes back as it was, closed or locked.
+  * A window shatters into a spray of glinting shards and leaves broken glass on the floor.
+* Everything in the interface is now in English: the confirmation dialog, the chat card, the wall sheet section and notifications.
+
 ## Changes in 0.5.3
 
 * Each wall's sheet (double-click a wall) has a **Pyre: parede quebrável** section: material, Hardness, maximum HP and current HP (with a button back to full). Empty fields use the material's numbers. Tick **apply to the other selected walls** to set many walls at once. Saves the moment a field changes.

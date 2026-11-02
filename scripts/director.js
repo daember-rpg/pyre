@@ -302,10 +302,10 @@ export class Director {
   }
 
   /** A wall gives way (chunks fly away from the blast and land as rubble), or is put back (the rubble flies home). */
-  playCollapse(c, material = "stone", fromPx = null, cause = null) { this.#wall(c, material, fromPx, false, cause); }
-  playRebuild(c, material = "stone") { this.#wall(c, material, null, true); }
+  playCollapse(c, material = "stone", fromPx = null, cause = null, kind = "wall") { this.#wall(c, material, fromPx, false, cause, kind); }
+  playRebuild(c, material = "stone", kind = "wall") { this.#wall(c, material, null, true, null, kind); }
 
-  #wall(c, material, fromPx, rebuild, cause = null) {
+  #wall(c, material, fromPx, rebuild, cause = null, kind = "wall") {
     if (!this.enabled || !c) return;
     const o = this.overlay;
     const a = o.toFeet({ x: c[0], y: c[1] }), b = o.toFeet({ x: c[2], y: c[3] });
@@ -316,7 +316,7 @@ export class Director {
       const d = b.clone().sub(a).normalize(), n = new THREE.Vector2(-d.y, d.x);
       side = Math.sign(mid.clone().sub(f).dot(n)) || 0;
     }
-    this.#add(new WallEffect(o, { a, b, material, side, rebuild, cause }));
+    this.#add(new WallEffect(o, { a, b, material, side, rebuild, cause, kind }));
   }
 
   reset() {

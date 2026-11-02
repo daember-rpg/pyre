@@ -13,11 +13,11 @@ function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key)
 
 /** PF2e "structure" statistics (GM Core, Material Statistics): Hardness, HP. */
 export const MATERIALS = {
-  wood:  { name: "Madeira", hardness: 10, hp: 40 },
-  stone: { name: "Pedra", hardness: 14, hp: 56 },
-  metal: { name: "Ferro / aço", hardness: 18, hp: 72 },
-  glass: { name: "Vidro", hardness: 2, hp: 8 },
-  none:  { name: "Inquebrável", hardness: Infinity, hp: Infinity },
+  wood:  { name: "Wood", hardness: 10, hp: 40 },
+  stone: { name: "Stone", hardness: 14, hp: 56 },
+  metal: { name: "Iron / steel", hardness: 18, hp: 72 },
+  glass: { name: "Glass", hardness: 2, hp: 8 },
+  none:  { name: "Unbreakable", hardness: Infinity, hp: Infinity },
 };
 /** Damage types that do nothing to objects. */
 const NO_EFFECT = new Set(["mental", "spirit", "poison", "vitality", "void", "bleed"]);
@@ -33,8 +33,8 @@ export const WEAKNESS = {
   metal: { acid: 2, cold: 1.5, electricity: 0.5, fire: 0.5, piercing: 0.5, slashing: 0.5 },
   glass: { sonic: 2, bludgeoning: 2, cold: 1.5 },
 };
-const TYPE_PT = { fire: "fogo", cold: "frio", acid: "ácido", electricity: "eletricidade", sonic: "sônico", force: "força", bludgeoning: "concussão",
-  piercing: "perfuração", slashing: "corte", untyped: "dano" };
+const TYPE_NAMES = { fire: "fire", cold: "cold", acid: "acid", electricity: "electricity", sonic: "sonic", force: "force", bludgeoning: "bludgeoning",
+  piercing: "piercing", slashing: "slashing", untyped: "damage" };
 
 const flag = (doc, k) => doc?.getFlag?.(MODULE_ID, k) ?? doc?.flags?.[MODULE_ID]?.[k];
 
@@ -43,9 +43,23 @@ export function sceneMaterial(scene = canvas?.scene) {
   const m = scene?.getFlag?.(MODULE_ID, "wallMaterial") ?? scene?.flags?.[MODULE_ID]?.wallMaterial;
   return MATERIALS[m] ? m : (MATERIALS[setting("defaultWallMaterial", "stone")] ? setting("defaultWallMaterial", "stone") : "stone");
 }
+/** door, window or wall. A window blocks movement but lets sight through up close or at a distance (Foundry's window preset). */
+export function wallKind(doc) {
+  if ((doc?.door ?? 0) > 0) return "door";
+  if (doc?.move !== 0 && (doc?.sight ?? 20) >= 30) return "window";
+  const was = flag(doc, "broken")?.kind;
+  return was ?? "wall";
+}
+const KIND_NAME = { wall: "Wall", door: "Door", window: "Window" };
+
 export function wallMaterial(doc) {
   const m = flag(doc, "material");
-  return MATERIALS[m] ? m : sceneMaterial(doc?.parent ?? canvas?.scene);
+  if (MATERIALS[m]) return m;
+  // Doors are wooden and windows glass unless you say otherwise
+  const kind = wallKind(doc);
+  if (kind === "door") return "wood";
+  if (kind === "window") return "glass";
+  return sceneMaterial(doc?.parent ?? canvas?.scene);
 }
 /** Hardness, maximum and current HP: the wall's own numbers when it has them, otherwise its material's. */
 export function wallStats(doc) {
@@ -135,7 +149,7 @@ function effective(byType, mat) {
     if (NO_EFFECT.has(type)) continue;
     const k = W[type] ?? 1;
     dmg += amount * k;
-    if (k !== 1) notes.push(`${TYPE_PT[type] ?? type} ${k > 1 ? "×" + k : "÷" + Math.round(1 / k)}`);
+    if (k !== 1) notes.push(`${TYPE_NAMES[type] ?? type} ${k > 1 ? "×" + k : "÷" + Math.round(1 / k)}`);
   }
   return { dmg: Math.floor(dmg), notes };
 }
@@ -154,12 +168,12 @@ export async function onDamageRoll(message, area) {
     const S = wallStats(d), mat = S.mat;
     const eff = effective(byType, mat);
     const dealt = Math.max(0, eff.dmg - S.hardness);
-    const M = { name: S.name, hardness: S.hardness, hp: S.maxHp };
+    const M = { name: `${KIND_NAME[wallKind(d)]} · ${S.name}`, hardness: S.hardness, hp: S.maxHp };
     return { d, mat, M, hp: S.hp, eff, dealt, left: S.hp - dealt, breaks: !S.unbreakable && S.hp - dealt <= 0 };
   }).filter((r) => r.dealt > 0 && Number.isFinite(r.hp));
   report("Walls", [`${total} damage reaches ${reached.length} wall(s)`, ...rows.map((r) => `${r.M.name}: ${r.eff.dmg}${r.eff.notes.length ? " (" + r.eff.notes.join(", ") + ")" : ""} − Hardness ${r.M.hardness} = ${r.dealt} → ${Math.max(0, r.left)}/${r.M.hp}`)]);
   if (!rows.length) return;
-  const chosen = await confirmDialog(area.name ?? "A explosão", total, rows);
+  const chosen = await confirmDialog(area.name ?? "The blast", total, rows);
   if (!chosen) return;
   const toBreak = rows.filter((r, i) => chosen.has(i));
   const damaged = rows.filter((r, i) => !chosen.has(i));
@@ -170,19 +184,19 @@ export async function onDamageRoll(message, area) {
 async function confirmDialog(name, total, rows) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const list = rows.map((r, i) => `<label class="pyre-wall-row"><input type="checkbox" name="w${i}" ${r.breaks ? "checked" : ""}>
-    <span><b>${esc(r.M.name)}</b> · ${r.eff.notes.length ? `<i>${esc(r.eff.notes.join(", "))}</i> · ` : ""}${r.dealt} de dano (Dureza ${r.M.hardness}) · ${r.breaks ? "<em>rompe</em>" : `fica com ${Math.max(1, r.left)}/${r.M.hp} PV`}</span></label>`).join("");
-  const content = `<p>${esc(name)} causou <b>${total}</b> de dano. Marque as paredes que se quebram:</p><div class="pyre-wall-list">${list}</div>
-    <p class="hint">Desmarcadas guardam o dano. Paredes quebradas podem ser restauradas no Pyre Studio.</p>`;
+    <span><b>${esc(r.M.name)}</b> · ${r.eff.notes.length ? `<i>${esc(r.eff.notes.join(", "))}</i> · ` : ""}${r.dealt} damage (Hardness ${r.M.hardness}) · ${r.breaks ? "<em>breaks</em>" : `left at ${Math.max(1, r.left)}/${r.M.hp} HP`}</span></label>`).join("");
+  const content = `<p>${esc(name)} dealt <b>${total}</b> damage. Tick the walls that break:</p><div class="pyre-wall-list">${list}</div>
+    <p class="hint">Unticked walls keep the damage. Broken walls can be restored from the chat card, the Walls controls or Pyre Studio.</p>`;
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2) return new Set(rows.map((r, i) => (r.breaks ? i : -1)).filter((i) => i >= 0));
   try {
     const result = await DialogV2.wait({
-      window: { title: "Pyre: paredes atingidas", icon: "fa-solid fa-dungeon" },
+      window: { title: "Pyre: walls hit", icon: "fa-solid fa-dungeon" },
       content,
       buttons: [
-        { action: "apply", label: "Aplicar", icon: "fa-solid fa-hammer", default: true,
+        { action: "apply", label: "Apply", icon: "fa-solid fa-hammer", default: true,
           callback: (event, button) => { const f = button.form; return rows.map((r, i) => (f.elements[`w${i}`]?.checked ? i : -1)).filter((i) => i >= 0); } },
-        { action: "ignore", label: "Ignorar", icon: "fa-solid fa-xmark", callback: () => null },
+        { action: "ignore", label: "Ignore", icon: "fa-solid fa-xmark", callback: () => null },
       ],
       rejectClose: false,
     });
@@ -193,12 +207,14 @@ async function confirmDialog(name, total, rows) {
 /** Break walls: they stop blocking, a collapse plays for everyone, rubble is left on the floor. */
 export async function breakWalls(docs, fromPx = null, cause = null) {
   const updates = docs.map((d) => ({
-    _id: d.id, move: 0, sight: 0, light: 0, sound: 0,
-    [`flags.${MODULE_ID}.broken`]: { move: d.move, sight: d.sight, light: d.light, sound: d.sound, at: Date.now(), from: fromPx, cause },
+    _id: d.id, move: 0, sight: 0, light: 0, sound: 0, door: 0, ds: 0,
+    // A broken door is just a hole: no door icon to open or lock. Everything comes back on restore.
+    [`flags.${MODULE_ID}.broken`]: { move: d.move, sight: d.sight, light: d.light, sound: d.sound, door: d.door ?? 0, ds: d.ds ?? 0,
+      kind: wallKind(d), material: wallMaterial(d), at: Date.now(), from: fromPx, cause },
   }));
   await canvas.scene.updateEmbeddedDocuments("Wall", updates);
   // The rubble lands on the far side from the blast, like the flying chunks
-  await addScars(docs.map((d) => ({ k: "rubble", c: [...d.c], mat: wallMaterial(d), side: sideOf(d.c, fromPx), cause, seed: Math.floor(Math.random() * 1e6) })));
+  await addScars(docs.map((d) => ({ k: "rubble", c: [...d.c], mat: wallMaterial(d), kind: wallKind(d), side: sideOf(d.c, fromPx), cause, seed: Math.floor(Math.random() * 1e6) })));
   postRestoreCard(docs);
 }
 
@@ -215,8 +231,8 @@ async function postRestoreCard(docs) {
     const ids = docs.map((d) => d.id);
     const gms = game.users.filter((u) => u.isGM).map((u) => u.id);
     await ChatMessage.create({
-      content: `<div class="pyre-card"><p><i class="fa-solid fa-dungeon"></i> <b>${ids.length} parede(s) quebrada(s).</b></p>
-        <button type="button" class="pyre-restore-btn" data-walls="${ids.join(",")}"><i class="fa-solid fa-rotate-left"></i> Restaurar</button></div>`,
+      content: `<div class="pyre-card"><p><i class="fa-solid fa-dungeon"></i> <b>${ids.length} wall${ids.length > 1 ? "s" : ""} broken.</b></p>
+        <button type="button" class="pyre-restore-btn" data-walls="${ids.join(",")}"><i class="fa-solid fa-rotate-left"></i> Restore</button></div>`,
       whisper: gms, speaker: { alias: "Pyre" }, flags: { [MODULE_ID]: { restoreCard: ids } },
     });
   } catch { /* the Studio can still restore */ }
@@ -226,8 +242,8 @@ async function postRestoreCard(docs) {
 export function onWallUpdate(doc, changes) {
   const f = changes?.flags?.[MODULE_ID];
   if (!f || doc.parent?.id !== canvas.scene?.id) return;
-  if (f.broken) Director.get().playCollapse(doc.c, wallMaterial(doc), f.broken.from ?? null, f.broken.cause ?? null);
-  else if (f.restored || "-=broken" in f) Director.get().playRebuild(doc.c, wallMaterial(doc));
+  if (f.broken) Director.get().playCollapse(doc.c, f.broken.material ?? wallMaterial(doc), f.broken.from ?? null, f.broken.cause ?? null, f.broken.kind ?? "wall");
+  else if (f.restored || "-=broken" in f) Director.get().playRebuild(doc.c, wallMaterial(doc), wallKind(doc));
 }
 
 export async function restoreWalls(ids = null) {
@@ -235,7 +251,8 @@ export async function restoreWalls(ids = null) {
   if (!docs.length) return 0;
   await canvas.scene.updateEmbeddedDocuments("Wall", docs.map((d) => {
     const b = d.getFlag(MODULE_ID, "broken");
-    return { _id: d.id, move: b.move, sight: b.sight, light: b.light, sound: b.sound, [`flags.${MODULE_ID}.-=broken`]: null, [`flags.${MODULE_ID}.-=hp`]: null,
+    return { _id: d.id, move: b.move, sight: b.sight, light: b.light, sound: b.sound, door: b.door ?? 0, ds: b.ds ?? 0,
+      [`flags.${MODULE_ID}.-=broken`]: null, [`flags.${MODULE_ID}.-=hp`]: null,
       [`flags.${MODULE_ID}.restored`]: Date.now() };
   }));
   // Take the rubble of those walls off the floor once it has flown back into the wall
@@ -274,17 +291,17 @@ export function injectWallConfig(app, html) {
   const others = (canvas.walls?.controlled ?? []).filter((w) => w.document.id !== doc.id).length;
   const box = document.createElement("fieldset");
   box.className = "pyre-wall-section";
-  const opts = [`<option value="">Padrão da cena (${sceneMat.name})</option>`]
-    .concat(Object.entries(MATERIALS).map(([id, m]) => `<option value="${id}" ${id === curMat ? "selected" : ""}>${m.name}${Number.isFinite(m.hp) ? ` (Dureza ${m.hardness}, ${m.hp} PV)` : ""}</option>`));
+  const opts = [`<option value="">Scene default (${sceneMat.name})</option>`]
+    .concat(Object.entries(MATERIALS).map(([id, m]) => `<option value="${id}" ${id === curMat ? "selected" : ""}>${m.name}${Number.isFinite(m.hp) ? ` (Hardness ${m.hardness}, ${m.hp} HP)` : ""}</option>`));
   const num = (v) => (Number.isFinite(v) ? v : "∞");
-  box.innerHTML = `<legend><i class="fa-solid fa-dungeon"></i> Pyre: parede quebrável</legend>
+  box.innerHTML = `<legend><i class="fa-solid fa-dungeon"></i> Pyre: breakable wall</legend>
     <div class="form-group"><label>Material</label><div class="form-fields"><select data-pyre="material">${opts.join("")}</select></div></div>
-    <div class="form-group"><label>Dureza</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hardness" value="${own("hardness")}" placeholder="${num(M.hardness)}"></div></div>
-    <div class="form-group"><label>PV máximos</label><div class="form-fields"><input type="number" min="1" step="1" data-pyre="maxHp" value="${own("maxHp")}" placeholder="${num(M.hp)}"></div></div>
-    <div class="form-group"><label>PV atuais</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hp" value="${own("hp")}" placeholder="${num(S.maxHp)}">
-      <button type="button" data-pyre="heal" title="Voltar aos PV máximos"><i class="fa-solid fa-heart"></i></button></div></div>
-    ${others ? `<div class="form-group"><label class="checkbox"><input type="checkbox" data-pyre="batch"> Aplicar também às outras ${others} parede(s) selecionada(s)</label></div>` : ""}
-    <p class="hint">Campos vazios usam o material. Inquebrável ignora os números. Salva na hora.</p>`;
+    <div class="form-group"><label>Hardness</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hardness" value="${own("hardness")}" placeholder="${num(M.hardness)}"></div></div>
+    <div class="form-group"><label>Max HP</label><div class="form-fields"><input type="number" min="1" step="1" data-pyre="maxHp" value="${own("maxHp")}" placeholder="${num(M.hp)}"></div></div>
+    <div class="form-group"><label>Current HP</label><div class="form-fields"><input type="number" min="0" step="1" data-pyre="hp" value="${own("hp")}" placeholder="${num(S.maxHp)}">
+      <button type="button" data-pyre="heal" title="Back to full HP"><i class="fa-solid fa-heart"></i></button></div></div>
+    ${others ? `<div class="form-group"><label class="checkbox"><input type="checkbox" data-pyre="batch"> Also apply to the other ${others} selected wall${others > 1 ? "s" : ""}</label></div>` : ""}
+    <p class="hint">Empty fields use the material. Unbreakable ignores the numbers. Saves as you change it.</p>`;
   const batch = () => box.querySelector("[data-pyre=batch]")?.checked;
   const targets = () => [doc, ...(batch() ? canvas.walls.controlled.map((w) => w.document).filter((d) => d.id !== doc.id) : [])];
   const save = async (key, raw) => {
@@ -298,7 +315,7 @@ export function injectWallConfig(app, html) {
     });
     await canvas.scene.updateEmbeddedDocuments("Wall", updates);
     const n = updates.length;
-    ui.notifications?.info(`Pyre: ${n > 1 ? `${n} paredes atualizadas` : "parede atualizada"}.`);
+    ui.notifications?.info(`Pyre: ${n > 1 ? `${n} walls updated` : "wall updated"}.`);
   };
   for (const el of box.querySelectorAll("[data-pyre]")) {
     const key = el.dataset.pyre;
@@ -318,8 +335,8 @@ export function injectWallConfig(app, html) {
 /** Walls layer tools for the GM: put every broken wall back, and open the Scene tools. */
 export function wallTools(controls, openStudio) {
   if (!game.user?.isGM) return;
-  const restore = { name: "pyre-restore-walls", title: "Pyre: restaurar paredes quebradas", icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
-    onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? `Pyre: ${n} parede(s) restaurada(s).` : "Pyre: nenhuma parede quebrada nesta cena.")) };
+  const restore = { name: "pyre-restore-walls", title: "Pyre: restore broken walls", icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
+    onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? `Pyre: ${n} wall${n > 1 ? "s" : ""} restored.` : "Pyre: no broken walls in this scene.")) };
   restore.onClick = restore.onChange;
   if (Array.isArray(controls)) controls.find((c) => c.name === "walls")?.tools?.push(restore);
   else { const w = controls.walls; if (w?.tools) w.tools["pyre-restore-walls"] = restore; }
