@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.6
+
+* Fixed: emanations (areas around the caster, which are never placed) did not damage walls or leave lasting marks.
+
 ## 0.9.5
 
 * Fixed: damage from a creature's breath weapon (and other area abilities) did not reach walls. An unlinked creature's ability carries a different item address on its area than on its damage roll, so the two were never matched. Pyre now matches the damage roll to the area by the item, then by the ability's name, then by the same creature's latest area, and never takes a Strike's damage for the area's.

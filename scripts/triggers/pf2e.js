@@ -291,7 +291,10 @@ function castArea(message, item, plan, caster, targets, seed) {
   if (plan.areaType === "emanation") {
     playedAreas.add(message.id);
     report(`Cast: ${item.name}`, [...(plan.steps ?? []), `emanation ${len} ft around the caster`]);
-    director.playTemplate({ item, plan, caster, shape: { type: "circle", center: c.ft.clone(), distance: len + c.r }, seed });
+    const shape = { type: "circle", center: c.ft.clone(), distance: len + c.r };
+    director.playTemplate({ item, plan, caster, shape, seed });
+    // So its damage roll can break walls, and it leaves lasting marks, like any placed area
+    rememberArea(item, plan, shape, caster);
     return;
   }
   // Everything else waits for its area to be placed. If it never is, the damage roll aims it at the targets.
