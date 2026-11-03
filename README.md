@@ -66,7 +66,8 @@ Property runes add their look to any strike: flaming, frost, shock, corrosive, t
   * A broken wall stops blocking. A collapse plays for everyone and rubble stays on the floor.
   * Doors burst into planks and windows shatter into glass.
   * Restore walls from the GM's chat card, from the Walls layer controls, or from Pyre Studio. The rubble flies back and the wall closes.
-  * Each wall's material, Hardness and HP are set in the wall's own sheet: double-click a wall and use the **Pyre** section. You can apply the same values to every selected wall at once.
+  * Each wall's material, Hardness and HP are set in the wall's own sheet: double-click a wall and use the **Pyre** section.
+  * To set many at once, use the **Pyre: materials of many walls** button in the Walls layer controls. It changes the selected walls, or every wall, door or window in the scene, in one go.
   * Walls with no material of their own use the scene's default from Pyre Studio → Scene. Doors default to wood and windows to glass.
   * **Materials react to damage types:**
 

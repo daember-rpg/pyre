@@ -129,6 +129,7 @@
         <select name="wallMat">{{#each materials}}<option value="{{id}}">{{label}}</option>{{/each}}</select>
         <button type="button" class="ps-play" data-action="setWallMaterial"><i class="fa-solid fa-trowel-bricks"></i> {{localize "PYRE.Studio.Btn.SetMaterial"}}</button>
       </div>
+      <div class="ps-row"><button type="button" class="ps-play" data-action="batchWalls"><i class="fa-solid fa-dungeon"></i> {{localize "PYRE.Studio.Btn.ManyWalls"}}</button></div>
       <div class="ps-row">
         <button type="button" class="ps-play" data-action="breakSelected"><i class="fa-solid fa-hammer"></i> {{localize "PYRE.Studio.Btn.BreakSelected"}}</button>
         <button type="button" class="ps-play" data-action="restoreWalls" {{#unless brokenWalls}}disabled{{/unless}}><i class="fa-solid fa-rotate-left"></i> {{localize "PYRE.Studio.Btn.RestoreBrokenWalls" n=brokenWalls}}</button>

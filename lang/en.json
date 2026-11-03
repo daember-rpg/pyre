@@ -237,7 +237,8 @@
         "Scene": "Scene",
         "SetMaterial": "Set material",
         "Strike": "Strike",
-        "TestOnTheMap": "Test on the map"
+        "TestOnTheMap": "Test on the map",
+        "ManyWalls": "Edit many walls at once…"
       },
       "Check": {
         "CustomColours": "Custom colours",
@@ -406,6 +407,24 @@
       "spear": "Spear (long thrust)",
       "tail": "Tail / wing (wide sweep)",
       "warhammer": "Hammer / club / mace (shockwave)"
+    },
+    "Batch": {
+      "Tool": "Pyre: materials of many walls",
+      "Title": "Pyre: breakable walls",
+      "Apply": "Apply to",
+      "Target": {
+        "selected": "Selected walls ({n})",
+        "wall": "Every wall in this scene, not doors or windows ({n})",
+        "door": "Every door in this scene ({n})",
+        "window": "Every window in this scene ({n})",
+        "all": "Everything in this scene ({n})"
+      },
+      "KeepMaterial": "Keep each one's material",
+      "Unchanged": "unchanged",
+      "Repair": "Back to full HP",
+      "Hint": "A new material brings its own Hardness and HP. Type numbers to use your own instead; leave them empty to keep what each wall has.",
+      "Cancel": "Cancel",
+      "NoWalls": "Pyre: no walls to change. Select some on the Walls layer, or pick another group."
     }
   }
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2
+
+* **Edit many walls at once.** A new button in the Walls layer controls (and *Edit many walls at once…* in Pyre Studio → Scene) sets material, Hardness and HP for the selected walls, or for every wall, every door or every window in the scene, in one go. Foundry's own sheet only ever edits one wall.
+
 ## 0.9.1
 
 * The Pyre section of the wall, door and window sheet now sits with the sheet's own sections (after Door Triggers), scrolls with them and looks like them, instead of hanging below the Update button.

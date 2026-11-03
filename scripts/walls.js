@@ -341,12 +341,82 @@ export function injectWallConfig(app, html) {
   else (root.querySelector("form") ?? root).appendChild(box);
 }
 
-/** Walls layer tools for the GM: put every broken wall back, and open the Scene tools. */
+/**
+ * Many walls at once: material, Hardness and HP for the selected walls, or for every wall, door or window in
+ * the scene. Opened from the Walls layer controls; Foundry's own sheet only ever edits one wall.
+ */
+export async function openWallBatch() {
+  if (!game.user?.isGM || !canvas?.scene) return;
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (!DialogV2) return;
+  const all = (canvas.walls?.placeables ?? []).map((w) => w.document);
+  const sel = (canvas.walls?.controlled ?? []).map((w) => w.document);
+  const groups = {
+    selected: sel,
+    wall: all.filter((d) => wallKind(d) === "wall"),
+    door: all.filter((d) => wallKind(d) === "door"),
+    window: all.filter((d) => wallKind(d) === "window"),
+    all,
+  };
+  const first = sel.length ? "selected" : "wall";
+  const targetOpts = Object.entries(groups).map(([id, list]) =>
+    `<option value="${id}" ${id === first ? "selected" : ""} ${list.length ? "" : "disabled"}>${t(`Batch.Target.${id}`, { n: list.length })}</option>`).join("");
+  const matOpts = [`<option value="keep">${t("Batch.KeepMaterial")}</option>`,
+    `<option value="">${t("Walls.SceneDefault", { name: materialName(sceneMaterial()) })}</option>`]
+    .concat(Object.keys(MATERIALS).map((id) => `<option value="${id}">${materialLabel(id)}</option>`)).join("");
+  const content = `<div class="pyre-batch standard-form">
+    <div class="form-group"><label>${t("Batch.Apply")}</label><div class="form-fields"><select name="target">${targetOpts}</select></div></div>
+    <div class="form-group"><label>${t("Walls.Material")}</label><div class="form-fields"><select name="material">${matOpts}</select></div></div>
+    <div class="form-group"><label>${t("Walls.Hardness")}</label><div class="form-fields"><input type="number" name="hardness" min="0" step="1" placeholder="${t("Batch.Unchanged")}"></div></div>
+    <div class="form-group"><label>${t("Walls.MaxHp")}</label><div class="form-fields"><input type="number" name="maxHp" min="1" step="1" placeholder="${t("Batch.Unchanged")}"></div></div>
+    <div class="form-group"><label class="checkbox"><input type="checkbox" name="repair" checked> ${t("Batch.Repair")}</label></div>
+    <p class="hint">${t("Batch.Hint")}</p></div>`;
+  let data = null;
+  try {
+    data = await DialogV2.wait({
+      window: { title: t("Batch.Title"), icon: "fa-solid fa-dungeon" },
+      position: { width: 420 },
+      content,
+      buttons: [
+        { action: "apply", label: t("Walls.Apply"), icon: "fa-solid fa-check", default: true,
+          callback: (event, button) => { const f = button.form.elements;
+            return { target: f.target.value, material: f.material.value, hardness: f.hardness.value, maxHp: f.maxHp.value, repair: f.repair.checked }; } },
+        { action: "cancel", label: t("Batch.Cancel"), icon: "fa-solid fa-xmark", callback: () => null },
+      ],
+      rejectClose: false,
+    });
+  } catch { return; }
+  if (!data) return;
+  const docs = groups[data.target] ?? [];
+  if (!docs.length) return ui.notifications?.warn(t("Batch.NoWalls"));
+  const F = `flags.${MODULE_ID}`;
+  const num = (v) => (v === "" ? null : Math.max(0, Math.round(Number(v))));
+  const updates = docs.map((d) => {
+    const u = { _id: d.id };
+    if (data.material !== "keep") {
+      if (data.material) u[`${F}.material`] = data.material; else u[`${F}.-=material`] = null;
+      // A new material brings its own numbers unless you type others below
+      u[`${F}.-=hardness`] = null; u[`${F}.-=maxHp`] = null; u[`${F}.-=hp`] = null;
+    }
+    const h = num(data.hardness), m = num(data.maxHp);
+    if (h !== null) { delete u[`${F}.-=hardness`]; u[`${F}.hardness`] = h; }
+    if (m !== null) { delete u[`${F}.-=maxHp`]; u[`${F}.maxHp`] = Math.max(1, m); u[`${F}.-=hp`] = null; }
+    if (data.repair) u[`${F}.-=hp`] = null;
+    return u;
+  });
+  await canvas.scene.updateEmbeddedDocuments("Wall", updates);
+  ui.notifications?.info(tn("Walls.Updated", updates.length));
+}
+
+/** Walls layer tools for the GM: edit many walls at once, and put every broken wall back. */
 export function wallTools(controls, openStudio) {
   if (!game.user?.isGM) return;
+  const batch = { name: "pyre-wall-batch", title: t("Batch.Tool"), icon: "fa-solid fa-dungeon", button: true, order: 97, visible: true,
+    onChange: () => openWallBatch() };
+  batch.onClick = batch.onChange;
   const restore = { name: "pyre-restore-walls", title: t("Walls.RestoreTool"), icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
     onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? tn("Walls.Restored", n) : t("Walls.NoneBroken"))) };
   restore.onClick = restore.onChange;
-  if (Array.isArray(controls)) controls.find((c) => c.name === "walls")?.tools?.push(restore);
-  else { const w = controls.walls; if (w?.tools) w.tools["pyre-restore-walls"] = restore; }
+  if (Array.isArray(controls)) controls.find((c) => c.name === "walls")?.tools?.push(batch, restore);
+  else { const w = controls.walls; if (w?.tools) { w.tools["pyre-wall-batch"] = batch; w.tools["pyre-restore-walls"] = restore; } }
 }

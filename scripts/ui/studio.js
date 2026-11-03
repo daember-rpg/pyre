@@ -4,7 +4,7 @@ import { STANDARD } from "../data/presets.js";
 import { RUNES, BOMBS } from "../data/strikes.js";
 import { TRADITIONS } from "../data/glow.js";
 import { slugOf } from "../resolver.js";
-import { MATERIALS, setMaterial, restoreWalls, breakWalls, brokenCount, sceneMaterial, materialName, materialLabel } from "../walls.js";
+import { MATERIALS, openWallBatch, setMaterial, restoreWalls, breakWalls, brokenCount, sceneMaterial, materialName, materialLabel } from "../walls.js";
 import { clearScars } from "../core/scars.js";
 import { t } from "../i18n.js";
 
@@ -70,6 +70,7 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
       breakSelected: PyreStudio.#onBreakSelected,
       restoreWalls: PyreStudio.#onRestoreWalls,
       clearMarks: PyreStudio.#onClearMarks,
+      batchWalls: async function () { await openWallBatch(); this.render(); },
     },
   };
 
