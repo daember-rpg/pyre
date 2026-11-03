@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.1
+
+* The Pyre section of the wall, door and window sheet now sits with the sheet's own sections (after Door Triggers), scrolls with them and looks like them, instead of hanging below the Update button.
+* Picking a new material in that section also clears custom Hardness and HP, so the wall takes the new material's numbers.
+
 ## 0.9.0 (release candidate for 1.0)
 
 * **Natural attacks with more character.** Claws leave three raked scratches on the floor; jaws lunge harder and throw dust and grit; a punch flashes a sharp star inside its impact ring; a tail sweep drags a wide ring of dust and kicks up pebbles.

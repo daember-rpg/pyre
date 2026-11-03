@@ -315,6 +315,8 @@ export function injectWallConfig(app, html) {
       if (value === null || value === "") u[`flags.${MODULE_ID}.-=${key}`] = null; else u[`flags.${MODULE_ID}.${key}`] = value;
       // A new material or maximum starts the wall at full health
       if (key === "material" || key === "maxHp") u[`flags.${MODULE_ID}.-=hp`] = null;
+      // A new material brings its own numbers: custom Hardness and HP from the old one are dropped
+      if (key === "material") { u[`flags.${MODULE_ID}.-=hardness`] = null; u[`flags.${MODULE_ID}.-=maxHp`] = null; }
       return u;
     });
     await canvas.scene.updateEmbeddedDocuments("Wall", updates);
@@ -330,10 +332,13 @@ export function injectWallConfig(app, html) {
     el.addEventListener("change", (ev) => { ev.stopPropagation(); save(key, el.value); });
     el.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); el.blur(); } });
   }
-  const form = root.querySelector("form") ?? root;
-  const footer = form.querySelector("footer, .form-footer, button[type=submit]");
-  if (footer?.parentElement === form) form.insertBefore(box, footer); else form.appendChild(box);
-  app.setPosition?.({ height: "auto" });
+  // Sit with the sheet's own sections, inside its scrolling area and above the Update button, so it scrolls with them
+  const sections = [...root.querySelectorAll("fieldset")].filter((f) => f !== box && !f.closest("footer, .form-footer"));
+  const last = sections.at(-1);
+  const footer = root.querySelector("footer.form-footer, .form-footer, footer");
+  if (last) last.after(box);
+  else if (footer?.parentElement) footer.parentElement.insertBefore(box, footer);
+  else (root.querySelector("form") ?? root).appendChild(box);
 }
 
 /** Walls layer tools for the GM: put every broken wall back, and open the Scene tools. */
