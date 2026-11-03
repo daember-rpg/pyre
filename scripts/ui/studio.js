@@ -49,6 +49,47 @@ async function spellNames() {
   return out;
 }
 
+/**
+ * A short list of matches under a text field as you type (names that start with what you typed first), instead of
+ * the browser's own list of every spell. Arrow keys move, Enter picks, Escape closes.
+ */
+export function suggest(input, names = []) {
+  const box = document.createElement("ul");
+  box.className = "ps-suggest";
+  box.hidden = true;
+  input.insertAdjacentElement("afterend", box);
+  let items = [], cur = -1;
+  const close = () => { box.hidden = true; cur = -1; };
+  const pick = (name) => { input.value = name; close(); input.dispatchEvent(new Event("change", { bubbles: true })); };
+  const mark = () => box.querySelectorAll("li").forEach((li, i) => li.classList.toggle("on", i === cur));
+  const show = () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) return close();
+    const starts = [], has = [];
+    for (const n of names) { const l = n.toLowerCase(); if (l.startsWith(q)) starts.push(n); else if (l.includes(q)) has.push(n); if (starts.length >= 8) break; }
+    items = starts.concat(has).slice(0, 8);
+    if (!items.length || (items.length === 1 && items[0].toLowerCase() === q)) return close();
+    box.replaceChildren(...items.map((n) => {
+      const li = document.createElement("li");
+      const i = n.toLowerCase().indexOf(q);
+      li.append(n.slice(0, i), Object.assign(document.createElement("b"), { textContent: n.slice(i, i + q.length) }), n.slice(i + q.length));
+      li.addEventListener("mousedown", (ev) => { ev.preventDefault(); pick(n); });
+      return li;
+    }));
+    cur = -1; box.hidden = false;
+  };
+  input.addEventListener("input", show);
+  input.addEventListener("focus", show);
+  input.addEventListener("blur", () => setTimeout(close, 120));
+  input.addEventListener("keydown", (ev) => {
+    if (box.hidden) return;
+    if (ev.key === "ArrowDown") { cur = Math.min(items.length - 1, cur + 1); mark(); ev.preventDefault(); }
+    else if (ev.key === "ArrowUp") { cur = Math.max(0, cur - 1); mark(); ev.preventDefault(); }
+    else if (ev.key === "Enter" && cur >= 0) { pick(items[cur]); ev.preventDefault(); }
+    else if (ev.key === "Escape") { close(); ev.preventDefault(); ev.stopPropagation(); }
+  });
+}
+
 /** GM window: test effects on the scene and edit per-spell overrides. */
 export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -129,6 +170,9 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Scene tab: the scene's default material and the damage-type rule save as soon as they change. */
   _onRender(context, options) {
     super._onRender?.(context, options);
+    for (const input of this.element.querySelectorAll("[data-suggest]")) {
+      suggest(input, input.dataset.suggest === "spells" ? context.spellNames : context.attackNames);
+    }
     const sel = this.element.querySelector("[name=sceneMat]");
     sel?.addEventListener("change", async () => {
       await canvas.scene?.setFlag(MODULE_ID, "wallMaterial", sel.value);

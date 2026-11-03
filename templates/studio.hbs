@@ -58,8 +58,7 @@
 
     <fieldset class="ps-card">
       <legend>{{localize "PYRE.Studio.Ov.Add"}}</legend>
-      <label class="ps-wide">{{localize "PYRE.Studio.Field.Spell"}}<input type="text" name="ovSpell" list="pyre-spell-names" placeholder="{{localize 'PYRE.Studio.Attr.StartTypingASpellName'}}" autocomplete="off"></label>
-      <datalist id="pyre-spell-names">{{#each spellNames}}<option value="{{this}}"></option>{{/each}}</datalist>
+      <label class="ps-wide">{{localize "PYRE.Studio.Field.Spell"}}<input type="text" name="ovSpell" data-suggest="spells" placeholder="{{localize 'PYRE.Studio.Attr.StartTypingASpellName'}}" autocomplete="off"></label>
       <div class="ps-grid">
         <label>{{localize "PYRE.Studio.Field.Delivery"}}<select name="ovRecipe"><option value="">{{localize "PYRE.Studio.Opt.Automatic"}}</option>{{#each recipes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
         <label>{{localize "PYRE.Studio.Field.Element"}}<select name="ovElement"><option value="">{{localize "PYRE.Studio.Opt.Automatic"}}</option>{{#each elements}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
@@ -96,8 +95,7 @@
     <fieldset class="ps-card">
       <legend>{{localize "PYRE.Studio.Ov.Attacks"}}</legend>
       <p class="ps-note">{{localize "PYRE.Studio.Ov.AttacksHint"}}</p>
-      <label class="ps-wide">{{localize "PYRE.Studio.Field.Attack"}}<input type="text" name="soName" list="pyre-attack-names" placeholder="{{localize 'PYRE.Studio.Attr.StartTypingAnAttackName'}}" autocomplete="off"></label>
-      <datalist id="pyre-attack-names">{{#each attackNames}}<option value="{{this}}"></option>{{/each}}</datalist>
+      <label class="ps-wide">{{localize "PYRE.Studio.Field.Attack"}}<input type="text" name="soName" data-suggest="attacks" placeholder="{{localize 'PYRE.Studio.Attr.StartTypingAnAttackName'}}" autocomplete="off"></label>
       <div class="ps-grid">
         <label>{{localize "PYRE.Studio.Field.LooksLike"}}<select name="soWeapon">{{#each weapons}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>
         <label>{{localize "PYRE.Studio.Field.ExtraRune"}}<select name="soRune"><option value="none">{{localize "PYRE.Studio.Opt.FromTheItem"}}</option>{{#each runes}}<option value="{{id}}">{{label}}</option>{{/each}}</select></label>

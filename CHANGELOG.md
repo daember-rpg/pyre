@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.7
+
+* Pyre Studio scrolls again when its content is taller than the window.
+* The spell and attack fields under Overrides show a short list of up to 8 matches as you type (names that start with what you typed come first, the typed part highlighted), instead of the browser's list of every spell. Arrow keys move, Enter picks, Escape closes.
+* More room around the tabs at the top of Pyre Studio, with a clearer active tab.
+
 ## 0.9.6
 
 * Fixed: emanations (areas around the caster, which are never placed) did not damage walls or leave lasting marks.
