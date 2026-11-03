@@ -345,8 +345,13 @@ export function injectWallConfig(app, html) {
  * Many walls at once: material, Hardness and HP for the selected walls, or for every wall, door or window in
  * the scene. Opened from the Walls layer controls; Foundry's own sheet only ever edits one wall.
  */
+let batchOpen = false;
 export async function openWallBatch() {
-  if (!game.user?.isGM || !canvas?.scene) return;
+  if (!game.user?.isGM || !canvas?.scene || batchOpen) return;
+  batchOpen = true;
+  try { await batchDialog(); } finally { batchOpen = false; }
+}
+async function batchDialog() {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2) return;
   const all = (canvas.walls?.placeables ?? []).map((w) => w.document);
@@ -408,15 +413,23 @@ export async function openWallBatch() {
   ui.notifications?.info(tn("Walls.Updated", updates.length));
 }
 
+/**
+ * Foundry V13+ calls a button tool's onChange and, for older code, its onClick too: run the action once per click.
+ */
+function oncePerClick(fn) {
+  let last = 0;
+  return (...args) => { const now = Date.now(); if (now - last < 400) return; last = now; return fn(...args); };
+}
+
 /** Walls layer tools for the GM: edit many walls at once, and put every broken wall back. */
 export function wallTools(controls, openStudio) {
   if (!game.user?.isGM) return;
+  const openBatch = oncePerClick(() => openWallBatch());
   const batch = { name: "pyre-wall-batch", title: t("Batch.Tool"), icon: "fa-solid fa-dungeon", button: true, order: 97, visible: true,
-    onChange: () => openWallBatch() };
-  batch.onClick = batch.onChange;
+    onChange: openBatch, onClick: openBatch };
+  const doRestore = oncePerClick(() => restoreWalls().then((n) => ui.notifications.info(n ? tn("Walls.Restored", n) : t("Walls.NoneBroken"))));
   const restore = { name: "pyre-restore-walls", title: t("Walls.RestoreTool"), icon: "fa-solid fa-trowel-bricks", button: true, order: 98, visible: true,
-    onChange: () => restoreWalls().then((n) => ui.notifications.info(n ? tn("Walls.Restored", n) : t("Walls.NoneBroken"))) };
-  restore.onClick = restore.onChange;
+    onChange: doRestore, onClick: doRestore };
   if (Array.isArray(controls)) controls.find((c) => c.name === "walls")?.tools?.push(batch, restore);
   else { const w = controls.walls; if (w?.tools) { w.tools["pyre-wall-batch"] = batch; w.tools["pyre-restore-walls"] = restore; } }
 }

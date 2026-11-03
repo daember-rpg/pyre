@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.4
+
+* Fixed: the Walls layer buttons (edit many walls, restore broken walls) ran twice per click, opening two windows.
+
 ## 0.9.3
 
 * **Better stone walls breaking.** The pieces are now flat-sided broken blocks with bevelled, lit faces and real shadows, instead of round pale blobs. They burst out at a spread of angles, arc through the air, bounce once and skid to a stop. A few big blocks stay near the wall and grit flies farthest. The dust is a darker, ragged billowing cloud. What broke the wall (fire, acid, frost…) tints only some edges and cools as the pieces land.
