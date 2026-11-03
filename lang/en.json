@@ -270,7 +270,8 @@
         "Striking": "Striking",
         "ThisSceneSDefaultMaterial": "This scene's default material",
         "Tradition": "Tradition",
-        "Weapon": "Weapon"
+        "Weapon": "Weapon",
+        "ThirdRune": "Third rune"
       },
       "Msg": {
         "Automatic": "Back to automatic.",
@@ -289,7 +290,8 @@
         "SelectWalls": "Select walls on the Walls layer first.",
         "TargetToken": "Target a token (press T over it) to strike at.",
         "WeaknessOff": "Every damage type counts the same against walls.",
-        "WeaknessOn": "Materials react to damage types."
+        "WeaknessOn": "Materials react to damage types.",
+        "RuneSlots": "A +{potency} weapon holds {n} property rune(s); the extra runes are left off. Raise Potency to use them all."
       },
       "NoAnimation": "No animation",
       "Opt": {

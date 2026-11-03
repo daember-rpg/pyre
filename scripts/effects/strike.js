@@ -51,7 +51,7 @@ export class StrikeEffect {
       const id = (BOMBS[r.bomb] ?? BOMBS.fire).rune;
       return [{ id, rune: RUNES[id], greater: (r.bombLevel ?? 1) >= 2, bomb: true }];
     }
-    return (r.runes ?? []).filter((x) => RUNES[x.id]).slice(0, 2).map((x) => ({ ...x, rune: RUNES[x.id] }));
+    return (r.runes ?? []).filter((x) => RUNES[x.id]).slice(0, 3).map((x) => ({ ...x, rune: RUNES[x.id] }));
   }
 
   #plan() {
@@ -115,7 +115,7 @@ export class StrikeEffect {
       ...U, uLifeMin: { value: 0.6 }, uLifeMax: { value: 1.4 }, uWind: { value: new THREE.Vector2(0.4, 0.6) },
       uSmokeColor: { value: new THREE.Vector3(0.2, 0.17, 0.14) }, uSmokeGlow: { value: new THREE.Vector3(0.2, 0.17, 0.14) }, uSmokeGain: { value: 0.4 },
       uLength: this.dustLen, uEmit: { value: 0.1 }, uTurb: { value: 0.6 } } });
-    this.slots = [0, 1].map((i) => {
+    this.slots = [0, 1, 2].map((i) => {
       const C = makeC(), len = { value: 4 };
       const fire = particles(g, { max: 4200, seed: 61 + i, vs: GL.FIRE_VS, fs: GL.FIRE_FS, order: 2, uniforms: {
         ...U, ...C, uLifeMin: { value: 0.5 }, uLifeMax: { value: 0.85 }, uFireGain: { value: 0.04 }, uDarkAlpha: { value: 0.2 },
@@ -243,8 +243,8 @@ export class StrikeEffect {
         setBlend(slot.fire.mat, pal.dark ? "normal" : "add");
         const count = Math.min(slot.fire.max, Math.round(1800 * qk * R.puff * (1 + 0.5 * g)));
         slot.fire.geo.instanceCount = count;
-        // Rune fire sits on top of the weapon's own mark; two runes share the light so they never wash out to white.
-        const share = runes.length > 1 ? 0.55 : 1;
+        // Rune fire sits on top of the weapon's own mark; several runes share the light so they never wash out to white.
+        const share = runes.length > 2 ? 0.42 : runes.length > 1 ? 0.55 : 1;
         fu.uFireGain.value = 0.05 * I * (1 + 0.15 * g) * (1800 * qk / Math.max(count, 1)) * (R.puff > 0.5 ? 1 : 0.8) * (pal.dark ? 1 : 0.32 * share);
         fu.uDarkAlpha.value = Math.min(0.9, 0.3 * I * (1800 * qk / Math.max(count, 1)));
         fu.uLifeMin.value = R.slow ? 0.8 : 0.45; fu.uLifeMax.value = R.slow ? 1.4 : 0.85;
@@ -262,11 +262,11 @@ export class StrikeEffect {
         setBlend(slot.emb.mat, "add");
         const e = R.ember;
         eu.uMode.value = 2; eu.uHalfAng.value = 0; eu.uHalfTan.value = 0;
-        eu.uEmberMode.value = e.mode; v3(eu.uEmberColor, e.color); eu.uEmberGain.value = I * (1 + 0.3 * g) / Math.max(1, qk);
+        eu.uEmberMode.value = e.mode; v3(eu.uEmberColor, e.color); eu.uEmberGain.value = I * (1 + 0.3 * g) / Math.max(1, qk) * (runes.length > 2 ? 0.55 : runes.length > 1 ? 0.8 : 1);
         eu.uEmberDrag.value = e.drag; eu.uEmberSpeed.value = e.speed; eu.uEmberSize.value = e.size; eu.uEmberStreak.value = e.streak;
         eu.uEmberBurst.value = Math.min(0.9, e.burst * (1 + 0.5 * g)); eu.uEmberScatter.value = e.scatter;
         eu.uLifeMin.value = e.life[0]; eu.uLifeMax.value = e.life[1];
-        slot.emb.geo.instanceCount = Math.min(slot.emb.max, Math.round(520 * e.count * qk * (1 + 0.6 * g) * (crit ? 1.4 : 1)));
+        slot.emb.geo.instanceCount = Math.min(slot.emb.max, Math.round(520 * e.count * qk * (1 + 0.6 * g) * (crit ? 1.4 : 1) * (runes.length > 2 ? 0.7 : 1)));
       }
     });
     const lightRune = runes.find((x) => x.rune.palette);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.8
+
+* **Three property runes.** As in PF2e, a weapon holds one property rune per point of potency, up to three. Weapons with three runes now show all three (they used to show two), and the light is shared so they don't wash out to white.
+* Pyre Studio: a **Third rune** field for strike tests, and the rune lists no longer show "None" twice. A test follows the potency rule: a +1 weapon shows one rune, and the Studio says when extra runes were left off.
+
 ## 0.9.7
 
 * Pyre Studio scrolls again when its content is taller than the window.

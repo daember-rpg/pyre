@@ -351,7 +351,7 @@ export function resolveStrike(item, options = [], ctx = {}) {
   if (ov?.rune && RUNES[ov.rune]) { runes.push({ id: ov.rune, greater: false }); steps.push(`GM rune ${ov.rune}`); }
   for (const key of sys.runes?.property ?? []) {
     const r = readRune(key);
-    if (r && runes.length < 2) runes.push(r);
+    if (r && runes.length < 3) runes.push(r);   // PF2e: up to 3 property runes (one per point of potency)
   }
   // NPC strikes: extra energy damage reads like an elemental rune
   if (!runes.length) {

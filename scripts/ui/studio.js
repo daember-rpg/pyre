@@ -148,7 +148,7 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
       marks: (canvas?.scene?.getFlag(MODULE_ID, "scars") ?? []).length,
       presetGroups: Object.entries(groups).map(([label, items]) => ({ label, items })),
       weapons: Object.keys(WEAPON_EN).map((id) => ({ id, label: weaponLabel(id) })),
-      runes: Object.entries(RUNES).filter(([, r]) => r.family !== "bomb").map(([id, r]) => ({ id, label: t(`Rune.${id}`, null, r.name) })),
+      runes: Object.entries(RUNES).filter(([id, r]) => r.family !== "bomb" && id !== "none").map(([id, r]) => ({ id, label: t(`Rune.${id}`, null, r.name) })),
       bombs: Object.entries(BOMBS).map(([id, b]) => ({ id, label: t(`Bomb.${id}`, null, b.name) })),
       traditions: Object.entries(TRADITIONS).map(([id, tr]) => ({ id, label: t(`Tradition.${id}`, null, tr.name) })),
       recipes: Object.keys(RECIPE_EN).map((id) => ({ id, label: recipeLabel(id) })),
@@ -214,13 +214,17 @@ export class PyreStudio extends HandlebarsApplicationMixin(ApplicationV2) {
     const target = this.#targets()[0];
     if (!target) return this.#msg(t("Studio.Msg.TargetToken"), true);
     const weapon = this.#val("[name=weapon]");
-    const runes = [this.#val("[name=rune1]"), this.#val("[name=rune2]")].filter((r) => r && r !== "none").map((id) => ({ id, greater: this.element.querySelector("[name=greater]")?.checked ?? false }));
+    // PF2e: a weapon holds one property rune per point of potency (+1 → 1, +3 → 3)
+    const potency = Number(this.#val("[name=potency]")) || 0;
+    const picked = [this.#val("[name=rune1]"), this.#val("[name=rune2]"), this.#val("[name=rune3]")].filter((r) => r && r !== "none");
+    if (picked.length > potency) this.#msg(t("Studio.Msg.RuneSlots", { potency, n: potency }), true);
+    const runes = picked.slice(0, potency).map((id) => ({ id, greater: this.element.querySelector("[name=greater]")?.checked ?? false }));
     Director.get().playTestStrike({
       weapon, runes, potency: Number(this.#val("[name=potency]")) || 0, striking: Number(this.#val("[name=striking]")) || 0,
       bomb: this.#val("[name=bomb]"), bombLevel: 1, flurry: this.element.querySelector("[name=flurry]")?.checked ?? false,
       outcome: this.#val("[name=outcome]"),
     }, caster, target);
-    this.#msg("");
+    if (picked.length <= potency) this.#msg("");
   }
 
   static #onPlayGlow() {
