@@ -217,6 +217,10 @@
       "wallsBlock": {
         "Hint": "Bursts, breaths and other areas stop at walls that block movement, and creatures behind them do not react.",
         "Name": "Walls stop areas"
+      },
+      "pace": {
+        "Name": "Animation speed",
+        "Hint": "Lower plays every effect slower, higher faster. The default, 0.85, gives spells, strikes and breaking walls a little more time to read; 1 is the original pace."
       }
     },
     "Studio": {

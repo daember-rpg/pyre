@@ -20,6 +20,7 @@ export function registerSettings() {
     name: "PYRE.Setting.quality.Name", hint: "PYRE.Setting.quality.Hint",
     type: String, choices: { low: "PYRE.Setting.quality.Choice.low", medium: "PYRE.Setting.quality.Choice.medium", high: "PYRE.Setting.quality.Choice.high" }, default: "high",
   });
+  client("pace", { name: "PYRE.Setting.pace.Name", hint: "PYRE.Setting.pace.Hint", type: Number, range: { min: 0.5, max: 1.5, step: 0.05 }, default: 0.85 });
   client("adaptive", { name: "PYRE.Setting.adaptive.Name", hint: "PYRE.Setting.adaptive.Hint", type: Boolean, default: true });
   client("intensity", { name: "PYRE.Setting.intensity.Name", hint: "PYRE.Setting.intensity.Hint", type: Number, range: { min: 0.3, max: 2, step: 0.05 }, default: 1 });
   client("bloom", { name: "PYRE.Setting.bloom.Name", hint: "PYRE.Setting.bloom.Hint", type: Number, range: { min: 0, max: 2, step: 0.05 }, default: 0.7 });

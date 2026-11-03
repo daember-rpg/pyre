@@ -109,6 +109,7 @@ Open it from the fire icon in the token controls, or from **Configure Settings â
 | --- | --- |
 | Show effects | Walls stop areas |
 | Quality (low, medium, high) | Breakable walls |
+| Animation speed | |
 | Adaptive resolution | Lasting marks |
 | Brightness and glow | Animate spells |
 | Screen shake and impact zoom | Animate strikes |

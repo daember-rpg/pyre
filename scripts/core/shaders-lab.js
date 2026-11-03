@@ -923,28 +923,33 @@ void main(){
   vec2 e = uB - uA; float L = max(length(e), 0.01); vec2 t = e/L; vec2 n = vec2(-t.y, t.x);
   float u = aSeed.x;
   vec2 base = uA + e*u;
-  float side = uSide == 0.0 ? (aSeed.y < 0.5 ? -1.0 : 1.0) : (aSeed.y < 0.8 ? uSide : -uSide);
+  float side = uSide == 0.0 ? (aSeed.y < 0.5 ? -1.0 : 1.0) : (aSeed.y < 0.85 ? uSide : -uSide);
   float dust = step(0.5, uMode);
-  float slab0 = step(0.9, fract(aSeed.y*13.7 + aSeed.w*5.3))*(1.0 - dust);
-  float dist = mix(0.35 + 3.2*pow(aSeed.z, 1.7), 0.6 + 3.8*aSeed.z, dust)*(1.0 - slab0*0.55);
-  vec2 rest = base + n*side*dist + t*(aSeed.w - 0.5)*mix(1.6, 2.6, dust);
-  // The break runs along the wall from where it was hit (the middle when there is no blast)
-  float delay = abs(u - 0.5)*0.22 + aBirth*0.08;
-  float flight = mix(0.42 + 0.35*aLife, 1.6 + 0.8*aLife, dust);
+  // Mostly fist-sized chunks, some bigger blocks that stay near the wall, a spray of grit that flies far
+  float slab = step(0.88, fract(aSeed.y*13.7 + aSeed.w*5.3))*(1.0 - dust);
+  float grit = step(aSeed.w, 0.35)*(1.0 - slab)*(1.0 - dust);
+  float reach = mix(0.4 + 5.0*pow(aSeed.z, 1.5), 0.8 + 3.6*aSeed.z, dust)*(1.0 - slab*0.6)*(1.0 + grit*0.7);
+  // Thrown out at a spread of angles, not straight across
+  vec2 dir = normalize(n*side + t*(aSeed.w - 0.5)*mix(1.1, 0.9, dust));
+  vec2 rest = base + dir*reach;
+  // The break runs out from the middle of the wall
+  float delay = abs(u - 0.5)*0.18 + aBirth*0.06;
+  float flight = mix(0.55 + 0.45*aLife, 1.7 + 0.9*aLife, dust)*(1.0 + slab*0.25);
   float k = clamp((uT - delay)/flight, 0.0, 1.0);
   if(uRev > 0.5) k = 1.0 - clamp((uT - (0.25 - delay*0.6))/flight, 0.0, 1.0);
-  float ease = 1.0 - pow(1.0 - k, mix(3.0, 2.0, dust));
-  vec2 p = mix(base + n*side*0.1, rest, ease);
-  float hop = 4.0*k*(1.0 - k)*(1.0 - dust)*(0.6 + 0.8*aSeed.w);
-  // A chunk that has landed sits still; one in the air tumbles and looks bigger (closer to the camera)
-  float spin = aSeed.z*6.2831 + (1.0 - ease)*(aSeed.x - 0.5)*18.0;
-  // Mostly fist-sized chunks, a few big slabs
-  float slab = step(0.9, fract(aSeed.y*13.7 + aSeed.w*5.3));
-  float size = mix(uSize*(0.22 + 0.62*aSeed.w*aSeed.w + slab*(0.9 + 0.8*aSeed.z))*(1.0 + hop*0.9), uSize*(1.0 + 3.6*ease)*(0.5 + 0.9*aSeed.w), dust);
+  // Quick burst that slows as the piece skids to a stop
+  float ease = 1.0 - pow(1.0 - k, mix(2.6, 2.0, dust));
+  vec2 p = mix(base + n*side*0.15, rest, ease);
+  // One arc through the air, then a small bounce
+  float hop = (k < 0.62 ? sin(3.14159*k/0.62) : 0.28*sin(3.14159*clamp((k - 0.62)/0.24, 0.0, 1.0)))*(1.0 - dust)*(0.55 + 0.9*aSeed.w)*(1.0 - slab*0.5);
+  // Pieces tumble while flying and lie still once landed
+  float spin = aSeed.z*6.2831 + (1.0 - ease)*(aSeed.x - 0.5)*16.0*(1.0 - slab*0.6);
+  float size = mix(uSize*(0.2 + 0.55*aSeed.w*aSeed.w + slab*(0.8 + 0.7*aSeed.z))*(1.0 - grit*0.55)*(1.0 + hop*0.6),
+                   uSize*(1.2 + 3.4*ease)*(0.6 + 0.8*aSeed.w), dust);
   vUv = uv; vSeed = aSeed; vHop = hop; vT = k;
   float started = step(delay, uT);
   if(uRev > 0.5) started = 1.0;
-  vAlpha = started*uFade*mix(1.0, (1.0 - k)*smoothstep(0.0, 0.08, k)*0.9, dust);
+  vAlpha = started*uFade*mix(1.0, (1.0 - k)*smoothstep(0.0, 0.12, k), dust);
   if(uRev > 0.5) vAlpha *= smoothstep(0.0, 0.25, uT)*mix(step(0.02, k), 1.0, dust);
   vec2 world = p + rot2(position.xy*size, spin);
   gl_Position = projectionMatrix*viewMatrix*vec4(world, 0.0, 1.0);
@@ -955,41 +960,71 @@ uniform sampler2D uNoise;
 uniform float uMode, uWood, uHot, uGlass;
 uniform vec3 uPalA, uPalB, uDust, uHotCol;
 varying vec2 vUv; varying vec4 vSeed; varying float vAlpha; varying float vHop; varying float vT;
+float h1(float x){ return fract(sin(x*12.9898 + vSeed.y*78.233 + vSeed.z*37.719)*43758.5453); }
+vec2 vert(float i, float sides){
+  float a = (i + 0.38*(h1(i) - 0.5))/sides*6.28318;
+  float r = 0.6 + 0.36*h1(i + 17.0);
+  return vec2(cos(a), sin(a))*r;
+}
+float polyD(vec2 q, float sides, out vec2 nb){
+  float d = -10.0; nb = vec2(0.0, 1.0);
+  for(int i = 0; i < 8; i++){
+    float fi = float(i);
+    if(fi >= sides) break;
+    vec2 v0 = vert(fi, sides), v1 = vert(mod(fi + 1.0, sides), sides);
+    vec2 ed = v1 - v0;
+    vec2 nn = normalize(vec2(ed.y, -ed.x));
+    float sd = dot(q - v0, nn);
+    if(sd > d){ d = sd; nb = nn; }
+  }
+  return d;
+}
 void main(){
   vec2 p = vUv*2.0 - 1.0;
   if(uMode > 0.5){
-    // Dust puff: a soft, noisy cloud
-    float n = texture2D(uNoise, vUv*0.6 + vSeed.xy*5.0).r;
-    float m = (1.0 - smoothstep(0.25, 1.0, length(p)))*(0.55 + 0.6*n);
-    float a = clamp(m*vAlpha*0.42, 0.0, 1.0);
-    gl_FragColor = vec4(uDust*a, a);
+    // Dust: a billowing cloud with a ragged edge, darker in its folds
+    float n = texture2D(uNoise, vUv*0.55 + vSeed.xy*5.0).r;
+    float n2 = texture2D(uNoise, vUv*1.3 + vSeed.zw*3.0).r;
+    float r = length(p) + (n - 0.5)*0.55;
+    float m = 1.0 - smoothstep(0.35, 0.95, r);
+    float a = clamp(m*vAlpha*(0.22 + 0.25*n2), 0.0, 1.0);
+    gl_FragColor = vec4(uDust*(0.75 + 0.35*n2)*a, a);
     return;
   }
-  // Chunk: an irregular stone (or a long splinter for wood) lit from the top left, with a shadow when airborne
-  vec2 q = p; if(uWood > 0.5) q.y *= 2.6;
-  float ang = atan(q.y, q.x);
-  float sides = uWood > 0.5 ? 4.0 : 5.0 + floor(vSeed.w*3.0);
-  float seg = floor((ang + 3.14159)/6.28318*sides);
-  float edge = 0.6 + 0.32*fract(sin(seg*12.9898 + vSeed.y*78.233)*43758.5453);
-  float r = length(q);
-  float body = 1.0 - smoothstep(edge - 0.06, edge, r);
+  vec2 q = p;
+  float body, bevel, facet;
   if(uWood > 0.5){
     // Planks and splinters: long boards with torn, uneven ends
     float tear = 0.78 + 0.18*fract(sin(floor(p.y*6.0 + vSeed.z*20.0)*12.9898 + vSeed.y*78.2)*43758.5);
     float bx = abs(p.x)/tear, by = abs(p.y)/0.26;
-    r = max(bx, by)*edge;
-    body = 1.0 - smoothstep(0.92, 1.0, max(bx, by));
+    float d = max(bx, by);
+    body = 1.0 - smoothstep(0.92, 1.0, d);
+    bevel = smoothstep(0.7, 0.98, by);
+    facet = p.y > 0.0 ? 1.0 : 0.25;
+    q = vec2(p.x, p.y*2.6);
+  } else {
+    // A broken block: a flat-sided polygon with bevelled faces, not a rounded blob
+    q.x *= 1.0 + 0.45*vSeed.z;
+    float sides = uGlass > 0.5 ? 3.0 : 5.0 + floor(vSeed.w*3.0);
+    vec2 nb;
+    float d = polyD(q, sides, nb);
+    body = 1.0 - smoothstep(-0.03, 0.02, d);
+    bevel = smoothstep(-0.24, -0.02, d);
+    // The bevel facing the light (top left) is bright, the far ones dark
+    facet = 0.5 + 0.5*dot(nb, normalize(vec2(-0.55, 0.85)));
   }
-  vec2 sp = q - vec2(0.18, -0.26)*(0.4 + vHop);
-  float shadow = (1.0 - smoothstep(edge - 0.2, edge + 0.1, length(sp)))*(1.0 - body)*0.45;
-  vec2 nrm = normalize(q + 0.001);
-  float lit = 0.5 + 0.5*dot(nrm, normalize(vec2(-0.6, 0.8)));
-  float grain = texture2D(uNoise, vUv*1.7 + vSeed.zw*3.0).r;
-  vec3 col = mix(uPalA, uPalB, clamp(lit*0.8 + grain*0.35 - 0.1, 0.0, 1.0))*(1.0 - 0.35*smoothstep(edge - 0.18, edge, r));
+  float grain = texture2D(uNoise, vUv*1.9 + vSeed.zw*3.0).r;
+  float tone = mix(0.42 + 0.14*vSeed.y, facet, bevel*0.85) + (grain - 0.5)*0.35;
+  vec3 col = mix(uPalA, uPalB, clamp(tone, 0.0, 1.0));
+  // A soft contact shadow, longer while the piece is in the air
+  vec2 sp = q - vec2(0.16, -0.22)*(0.3 + vHop*1.1);
+  float shadow;
+  if(uWood > 0.5) shadow = (1.0 - smoothstep(0.45, 0.95, length(sp)))*(1.0 - body)*0.45;
+  else { vec2 nd; float sides2 = uGlass > 0.5 ? 3.0 : 5.0 + floor(vSeed.w*3.0); shadow = (1.0 - smoothstep(-0.05, 0.12, polyD(sp, sides2, nd)))*(1.0 - body)*0.55; }
   float a = clamp((body + shadow)*vAlpha, 0.0, 1.0);
-  // What broke it shows on the pieces: burning edges, corrosion, frost or crackling sparks, fading as they settle
-  float rim = smoothstep(edge - 0.32, edge - 0.02, r)*body;
-  vec3 hot = uHotCol*uHot*(rim*(0.6 + 0.8*grain))*(1.0 - 0.8*vT);
+  // What broke it shows on some pieces: glowing or tinted edges that cool as they land
+  float marked = step(0.5, fract(vSeed.y*7.13 + vSeed.x*3.1));
+  vec3 hot = uHotCol*uHot*bevel*body*marked*(0.5 + 0.7*grain)*(1.0 - smoothstep(0.1, 0.6, vT))*0.5;
   // Glass: see-through shards that catch the light as they turn
   float glint = uGlass*pow(max(0.0, sin(vSeed.x*40.0 + vT*26.0 + q.x*3.0)), 14.0)*body;
   float see = mix(1.0, 0.55, uGlass);

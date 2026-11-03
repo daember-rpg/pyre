@@ -274,7 +274,9 @@ export class Overlay {
   #frame(now) {
     if (!canvas?.ready) { this.running = false; return; }
     const raw = (now - this.last) / 1000;
-    const dt = Math.min(0.05, raw) * (globalThis.__pyreTimeScale ?? 1);
+    // Animation speed (per player): below 1 every effect plays slower, giving it more time to read
+    const pace = Math.max(0.4, Math.min(1.6, Number(setting("pace", 0.85)) || 0.85));
+    const dt = Math.min(0.05, raw) * (globalThis.__pyreTimeScale ?? 1) * pace;
     this.last = now;
     this.#adaptResolution(raw);
     // Shader clock: the page clock grows for hours in a Foundry session, and at those values the GPU's

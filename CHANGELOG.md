@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.3
+
+* **Better stone walls breaking.** The pieces are now flat-sided broken blocks with bevelled, lit faces and real shadows, instead of round pale blobs. They burst out at a spread of angles, arc through the air, bounce once and skid to a stop. A few big blocks stay near the wall and grit flies farthest. The dust is a darker, ragged billowing cloud. What broke the wall (fire, acid, frost…) tints only some edges and cools as the pieces land.
+* **Animation speed** (new per-player setting). Every effect now plays a little slower by default (0.85). Set it to 1 for the original pace, or anywhere from 0.5 to 1.5.
+
 ## 0.9.2
 
 * **Edit many walls at once.** A new button in the Walls layer controls (and *Edit many walls at once…* in Pyre Studio → Scene) sets material, Hardness and HP for the selected walls, or for every wall, every door or every window in the scene, in one go. Foundry's own sheet only ever edits one wall.

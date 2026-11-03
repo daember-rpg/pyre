@@ -16,7 +16,7 @@ const CAUSE = {
   force: { hot: [0.75, 0.6, 1.0], k: 0.9 },
 };
 const PAL = {
-  stone: { a: [0.2, 0.19, 0.17], b: [0.58, 0.55, 0.5], dust: [0.5, 0.46, 0.4] },
+  stone: { a: [0.14, 0.13, 0.12], b: [0.52, 0.49, 0.45], dust: [0.46, 0.42, 0.37] },
   wood:  { a: [0.2, 0.12, 0.06], b: [0.6, 0.42, 0.24], dust: [0.45, 0.36, 0.26] },
   metal: { a: [0.18, 0.19, 0.21], b: [0.62, 0.64, 0.68], dust: [0.42, 0.42, 0.44] },
   glass: { a: [0.35, 0.45, 0.5], b: [0.85, 0.95, 1.0], dust: [0.6, 0.66, 0.7] },
@@ -39,7 +39,7 @@ export class WallEffect {
     // A door bursts into a few long planks, a window into a spray of small shards, a wall into chunks
     const glass = req.material === "glass", door = req.kind === "door";
     const size = door ? 1.7 : glass ? 0.5 : req.material === "wood" ? 1.1 : 1.25;
-    const density = door ? 4 : glass ? 16 : 9, dustK = glass ? 0.6 : door ? 2 : 3.2;
+    const density = door ? 4 : glass ? 16 : 9, dustK = glass ? 0.5 : door ? 1.2 : 1.6;
     const pal = (C && (C[req.material] ?? C.all)) ?? PAL[req.material] ?? PAL.stone, q = QK[setting("quality", "high")] ?? 1;
     const U = (mode) => ({ uA: { value: req.a.clone() }, uB: { value: req.b.clone() }, uT: { value: 0 }, uSide: { value: req.side ?? 0 }, uMode: { value: mode },
       uRev: { value: req.rebuild ? 1 : 0 }, uSize: { value: size }, uFade: { value: 1 }, uNoise: { value: overlay.noise }, uGlass: { value: glass ? 1 : 0 },
