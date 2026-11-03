@@ -9,11 +9,40 @@ import { t } from "../i18n.js";
 
 /** Areas that just played, by the item that made them: a later damage roll can break the walls they reached. */
 const recentAreas = new Map();
+/** "Scene.s.Token.t.Actor.a.Item.i" and "Actor.a.Item.i" are the same item: an unlinked creature's copy and its sheet. */
+function itemIdOf(uuid) { const m = /Item\.([^.]+)$/.exec(uuid ?? ""); return m ? m[1] : null; }
+
+/**
+ * The area a damage roll belongs to. The roll may name the item differently from the area (an unlinked creature's
+ * breath, an inline damage link in an ability's text), so match by uuid, then by item id, then by name or slug,
+ * then by the same creature's latest area a short while ago.
+ */
+function areaForDamage(message, origin) {
+  if (origin?.uuid && recentAreas.has(origin.uuid)) return recentAreas.get(origin.uuid);
+  const now = Date.now(), fresh = [...recentAreas.values()].filter((a) => a.sceneId === canvas.scene?.id && now - a.at < 5 * 60 * 1000)
+    .sort((a, b) => b.at - a.at);
+  if (!fresh.length) return null;
+  const id = itemIdOf(origin?.uuid);
+  const byId = id && fresh.find((a) => a.itemId === id);
+  if (byId) return byId;
+  const tok = speakerToken(message);
+  const actorId = message.speaker?.actor ?? tok?.actor?.id ?? null;
+  const sameCreature = (a) => (tok && a.tokenId === tok.id) || (actorId && a.actorId === actorId);
+  const name = origin?.name ?? message.flags?.pf2e?.origin?.name ?? null, slug = origin?.slug ?? null;
+  const byName = fresh.find((a) => sameCreature(a) && ((slug && a.slug === slug) || (name && a.name === name)));
+  if (byName) return byName;
+  // A roll that names some other item (a Strike right after the breath) is not the area's damage
+  if (id || ["weapon", "melee"].includes(origin?.type) || message.flags?.pf2e?.context?.sourceType === "attack") return null;
+  // Last resort, for a damage link with no item behind it: that creature's area from the last two minutes
+  return fresh.find((a) => sameCreature(a) && now - a.at < 2 * 60 * 1000) ?? null;
+}
+
 function rememberArea(item, plan, shape, caster) {
   const key = item?.uuid; if (!key) return;
   const o = Director.get().overlay;
   const op = o.toPx(shape.center ?? shape.origin);
-  recentAreas.set(key, { shape, plan, name: item.name, at: Date.now(), sceneId: canvas.scene?.id, originPx: [op.x, op.y] });
+  recentAreas.set(key, { shape, plan, name: item.name, at: Date.now(), sceneId: canvas.scene?.id, originPx: [op.x, op.y],
+    itemId: item.id ?? itemIdOf(key), slug: item.slug ?? item.system?.slug ?? null, tokenId: caster?.id ?? null, actorId: item.actor?.id ?? caster?.actor?.id ?? null });
   for (const [k, v] of recentAreas) if (Date.now() - v.at > 10 * 60 * 1000) recentAreas.delete(k);
   leaveMarks(plan, shape, caster).catch(() => {});
 }
@@ -177,8 +206,13 @@ async function onChatMessage(message) {
   }
 
   // Any damage roll after an area (spell or creature ability): walls it reached may break
-  if (ctx?.type === "damage-roll" && origin?.uuid && recentAreas.has(origin.uuid)) {
-    onDamageRoll(message, recentAreas.get(origin.uuid)).catch((err) => fail("walls", err));
+  // (A spell cast without placing its area is handled just below, where its area is aimed first.)
+  const pending = origin?.type === "spell" ? untargetedCasts.get(castKey(message, origin)) : null;
+  const unplaced = !!(pending?.area && !playedAreas.has(pending.messageId) && Date.now() - pending.at <= 10 * 60 * 1000);
+  if ((ctx?.type === "damage-roll" || (!ctx?.type && message.isDamageRoll)) && !unplaced) {
+    const area = areaForDamage(message, origin);
+    if (area) onDamageRoll(message, area).catch((err) => fail("walls", err));
+    else if (setting("breakableWalls", false)) report("Walls", [`damage roll: no area placed by ${origin?.name ?? message.speaker?.alias ?? "this creature"} in the last few minutes`]);
   }
 
   // Damage roll of a spell that was cast without targets: play it now, at the damage roll's targets
