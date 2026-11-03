@@ -214,7 +214,10 @@ export class Overlay {
   /** Match the camera to the board's current pan and zoom. */
   #syncCamera() {
     const board = canvas.app.view;
-    const rect = board.getBoundingClientRect();
+    // While the screen shake / impact zoom is on, the board carries a CSS transform and its on-screen box is moved
+    // and scaled. Measuring that box would apply the shake twice to the effects (they would land beside their
+    // target, more so far from the impact). Use the board's resting box until the shake is over.
+    const rect = this.kickApplied && this.restRect ? this.restRect : (this.restRect = board.getBoundingClientRect());
     this.dom.style.left = `${rect.left}px`;
     this.dom.style.top = `${rect.top}px`;
     this.#resize(Math.round(rect.width), Math.round(rect.height));

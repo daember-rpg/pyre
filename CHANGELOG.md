@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.9
+
+* Fixed: on heavy hits, the impact (sparks, rune fire, rings) could land beside the target, sometimes a square or more away. The screen shake and impact zoom were applied twice to the effects layer: once when measuring the shaken map, and again by the shake itself. Effects now stay locked to the map while it shakes. This also stops the effects layer from being resized on every frame of a shake.
+
 ## 0.9.8
 
 * **Three property runes.** As in PF2e, a weapon holds one property rune per point of potency, up to three. Weapons with three runes now show all three (they used to show two), and the light is shared so they don't wash out to white.
