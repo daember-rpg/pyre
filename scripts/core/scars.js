@@ -62,7 +62,10 @@ export class ScarLayer {
 
   #attach(W, H) {
     const bt = this.tex?.baseTexture ?? this.tex?.source;
-    if (!this.tex || this.tex.destroyed || !bt || bt.destroyed) {
+    // Foundry's texture keeps a canvas's old size after the canvas is resized (another scene): start a fresh one then
+    const resized = this.texSize && (this.texSize[0] !== this.canvas.width || this.texSize[1] !== this.canvas.height);
+    this.texSize = [this.canvas.width, this.canvas.height];
+    if (!this.tex || this.tex.destroyed || !bt || bt.destroyed || resized) {
       this.tex = PIXI.BaseTexture ? new PIXI.Texture(new PIXI.BaseTexture(this.canvas)) : PIXI.Texture.from(this.canvas);
     } else bt.update?.();
     if (!this.holder || this.holder.destroyed || this.holder.parent !== canvas.primary) {

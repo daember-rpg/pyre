@@ -130,6 +130,14 @@ export class Overlay {
     return this.groundOk;
   }
 
+  #freshGroundTexture() {
+    const old = this.gTex;
+    this.gTex = PIXI.BaseTexture ? new PIXI.Texture(new PIXI.BaseTexture(this.gCanvas)) : PIXI.Texture.from(this.gCanvas);
+    if (this.gSprite && !this.gSprite.destroyed) this.gSprite.texture = this.gTex;
+    // Free the old GPU copy, never our canvas
+    try { if (old && old !== this.gTex) { const ob = old.baseTexture; old.destroy(false); if (ob && ob !== this.gTex.baseTexture) { ob.resource = null; ob.destroy(); } } } catch { /* already gone */ }
+  }
+
   /** Put (or put back, after a scene change) our sprite in Foundry's primary group, between tiles and tokens. */
   #attachGround() {
     if (this.gHolder && !this.gHolder.destroyed && this.gHolder.parent === canvas.primary) return;
@@ -158,10 +166,16 @@ export class Overlay {
       if (!busy) { if (this.gDirty) { this.gRenderer.setRenderTarget(null); this.gRenderer.clear(); this.gDirty = false; } return; }
       this.gDirty = true;
       const r = this.gRenderer;
-      // Floor effects are soft; a lower resolution keeps the copy into Foundry cheap
-      const dpr = Math.min(this.size.dpr, 1.25);
+      // Floor effects are soft: a fixed, modest resolution keeps the copy into Foundry cheap. It does not follow
+      // adaptive resolution, so the floor picture only changes size when the window does.
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       const W = Math.max(1, Math.round(rect.width * dpr)), H = Math.max(1, Math.round(rect.height * dpr));
-      if (this.gCanvas.width !== W || this.gCanvas.height !== H) { r.setPixelRatio(1); r.setSize(W, H, false); this.gRT.setSize(W, H); }
+      if (this.gCanvas.width !== W || this.gCanvas.height !== H) {
+        r.setPixelRatio(1); r.setSize(W, H, false); this.gRT.setSize(W, H);
+        // Foundry's texture keeps the picture's old size when the canvas is resized: the floor effects then
+        // land off their target (scaled toward the corner of the screen). Give the sprite a fresh texture.
+        this.#freshGroundTexture();
+      }
       r.setRenderTarget(this.gRT); r.clear();
       r.render(this.groundScene, this.camera);
       this.gFinal.uniforms.tScene.value = this.gRT.texture;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.10
+
+* Fixed: floor effects (the light under an impact, dust, smoke, scorch, casting circles) could appear away from their target, pulled toward the top left corner of the screen, while the rest of the effect played in the right place. When the floor picture changed size (adaptive resolution, or resizing the window), Foundry kept showing it at its old size. Pyre now hands Foundry a fresh picture whenever the size changes, and the floor layer no longer changes resolution with adaptive resolution at all.
+* The same safeguard for lasting marks when moving to a scene of a different size.
+
 ## 0.9.9
 
 * Fixed: on heavy hits, the impact (sparks, rune fire, rings) could land beside the target, sometimes a square or more away. The screen shake and impact zoom were applied twice to the effects layer: once when measuring the shaken map, and again by the shake itself. Effects now stay locked to the map while it shakes. This also stops the effects layer from being resized on every frame of a shake.
