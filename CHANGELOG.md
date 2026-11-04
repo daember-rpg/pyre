@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.11
+
+* README with a cover image, clips of fireballs, strikes, runes and breaking and restoring walls, and screenshots of Pyre Studio and the wall tools. The cover also shows on Foundry's package page.
+* Shorter choices in the "edit many walls" window, so they are no longer cut off.
+
 ## 0.9.10
 
 * Fixed: floor effects (the light under an impact, dust, smoke, scorch, casting circles) could appear away from their target, pulled toward the top left corner of the screen, while the rest of the effect played in the right place. When the floor picture changed size (adaptive resolution, or resizing the window), Foundry kept showing it at its old size. Pyre now hands Foundry a fresh picture whenever the size changes, and the floor layer no longer changes resolution with adaptive resolution at all.

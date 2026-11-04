@@ -2,7 +2,7 @@
   "id": "pyre",
   "title": "Pyre",
   "description": "Lightweight procedural spell, strike and condition effects for Pathfinder 2e, rendered live on the GPU. No video files.",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "authors": [
     {
       "name": "Fernando"
@@ -46,5 +46,11 @@
   "bugs": "https://github.com/daember-rpg/pyre/issues",
   "license": "https://raw.githubusercontent.com/daember-rpg/pyre/main/LICENSE",
   "readme": "https://github.com/daember-rpg/pyre#readme",
-  "changelog": "https://github.com/daember-rpg/pyre/blob/main/CHANGELOG.md"
+  "changelog": "https://github.com/daember-rpg/pyre/blob/main/CHANGELOG.md",
+  "media": [
+    {
+      "type": "cover",
+      "url": "https://raw.githubusercontent.com/daember-rpg/pyre/main/docs/media/cover.jpg"
+    }
+  ]
 }

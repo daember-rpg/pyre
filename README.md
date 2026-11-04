@@ -1,10 +1,14 @@
 # Pyre
 
+![Pyre: a fireball flies across a tavern and bursts on a group of enemies](docs/media/cover.jpg)
+
 Procedural spell, strike and condition effects for **Pathfinder 2e** on **Foundry VTT V13 and V14**.
 
 Everything is drawn live on the GPU from code (three.js, bundled locally). There are no video files, so the whole module is well under 1 MB, and every effect adapts to the spell, the weapon, the target and the map: fireballs fly and burst, breath weapons stop at walls, sparks bounce off them, swords leave cuts and axes leave gashes, and walls, doors and windows can break.
 
 Pyre works on its own. You do not need Sequencer, JB2A or any asset pack.
+
+![A fireball arcs from the caster, bursts inside its area and leaves the room glowing](docs/media/fireball.gif)
 
 ## Installation
 
@@ -50,6 +54,8 @@ Each weapon group has its own signature:
 * **Natural attacks:** punches, raking claws, biting jaws, tail sweeps.
 * **Alchemical bombs.**
 
+<p align="center"><img src="docs/media/strikes.gif" width="380" alt="Sword, axe, hammer, firearm and claws tested one after another from Pyre Studio"></p>
+
 Attacks are read in this order:
 
 1. the GM's attack override;
@@ -57,7 +63,9 @@ Attacks are read in this order:
 3. the attack's name (Claw, Jaws, Tail, Longsword…);
 4. its traits and damage type.
 
-Property runes add their look to any strike: flaming, frost, shock, corrosive, thundering, holy, unholy, astral, wounding, fearsome, ghost touch and speed.
+Property runes add their look to any strike: flaming, frost, shock, corrosive, thundering, holy, unholy, astral, wounding, fearsome, ghost touch and speed. As in PF2e, a weapon holds one property rune per point of potency, up to three, and Pyre shows them all.
+
+<p align="center"><img src="docs/media/runes-critical.gif" width="380" alt="Critical hits with a +3 weapon carrying flaming, frost and shock runes"></p>
 
 ### Walls
 
@@ -79,6 +87,14 @@ Property runes add their look to any strike: flaming, frost, shock, corrosive, t
   | Glass | 2 / 8 | sonic and bludgeoning ×2, cold ×1.5 | — |
 
   Force hits every material the same. Mental, spirit, poison, vitality, void and bleed damage do not harm walls.
+
+| A fireball breaks the walls it reaches | Restoring them: the rubble flies back |
+| --- | --- |
+| ![Walls bursting into planks and dust after the GM confirms](docs/media/walls-break.gif) | ![Broken walls rebuilding themselves](docs/media/walls-restore.gif) |
+
+| Edit many walls at once | Each wall's own Pyre section |
+| --- | --- |
+| ![The window that sets material, Hardness and HP for many walls](docs/media/walls-batch.png) | ![The Pyre section in a wall's configuration sheet](docs/media/wall-sheet.png) |
 
 ### Lasting marks
 
@@ -103,14 +119,18 @@ Open it from the fire icon in the token controls, or from **Configure Settings �
   * set the material of selected walls, break them, or restore broken walls;
   * clear lasting marks.
 
+| Test on the map | Overrides | Scene |
+| --- | --- | --- |
+| ![Pyre Studio, Test on the map](docs/media/studio-test.png) | ![Pyre Studio, Overrides](docs/media/studio-overrides.png) | ![Pyre Studio, Scene](docs/media/studio-scene.png) |
+
 ## Settings
 
 | Each player | The world (GM) |
 | --- | --- |
 | Show effects | Walls stop areas |
 | Quality (low, medium, high) | Breakable walls |
-| Animation speed | |
-| Adaptive resolution | Lasting marks |
+| Animation speed | Lasting marks |
+| Adaptive resolution | |
 | Brightness and glow | Animate spells |
 | Screen shake and impact zoom | Animate strikes |
 | Token reactions | Animate posted spell cards |

@@ -380,7 +380,7 @@ async function batchDialog() {
   try {
     data = await DialogV2.wait({
       window: { title: t("Batch.Title"), icon: "fa-solid fa-dungeon" },
-      position: { width: 420 },
+      position: { width: 460 },
       content,
       buttons: [
         { action: "apply", label: t("Walls.Apply"), icon: "fa-solid fa-check", default: true,
