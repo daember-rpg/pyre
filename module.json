@@ -1,11 +1,12 @@
 {
   "id": "pyre",
   "title": "Pyre",
-  "description": "Lightweight procedural spell, strike and condition effects for Pathfinder 2e, rendered live on the GPU. No video files.",
+  "description": "Procedural spell, strike and wall effects for Pathfinder 2e, drawn live on the GPU. No video files. Walls stop areas and can break.",
   "version": "1.0.0",
   "authors": [
     {
-      "name": "Fernando"
+      "name": "Fernando (daember-rpg)",
+      "url": "https://github.com/daember-rpg"
     }
   ],
   "compatibility": {
@@ -17,13 +18,6 @@
       {
         "id": "pf2e",
         "type": "system"
-      }
-    ],
-    "recommends": [
-      {
-        "id": "conjure",
-        "type": "module",
-        "reason": "Pyre animates creatures that Conjure summons."
       }
     ]
   },
