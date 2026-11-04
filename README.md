@@ -32,7 +32,7 @@ Then enable **Pyre** in your world. Foundry tells you when an update is availabl
 | A spell without damage (Haste, Fear, Mystic Armor…) | The tradition's circle on the caster, then a blessing, hex or self glow |
 | A creature's breath weapon or other area ability | Recognised from the ability's own data: cone or line, element, size |
 | Weapon, unarmed and NPC strikes | A signature per weapon group (see below), tinted by property runes |
-| Conditions and spell effects on an actor | Lasting auras for quickened, slowed, frightened, sickened, invisible, persistent fire and bleed damage, Shield and Mystic Armor, the Light spell, and helpful or hindering spell effects. More conditions are in development (see below) |
+| Conditions and spell effects on an actor | Lasting auras for the conditions that change how a creature looks (see below), persistent damage, Shield and Mystic Armor, the Light spell, and helpful or hindering spell effects |
 | A creature summoned with Conjure (in development, see below) | Summon circle and arrival; dissolve on dismissal |
 
 Effects are worked out from the item's data: area, defense, damage types, traits, weapon group and runes. Every client plays the same effect from the same seed, without sockets.
@@ -43,17 +43,29 @@ Effects are worked out from the item's data: area, defense, damage types, traits
 
 ### Condition auras
 
-Pyre gives a lasting aura to the conditions that change how a creature looks or moves:
+Pyre gives a lasting aura to the conditions that change how a creature looks or moves. A creature shows its three most telling auras at once.
 
-* quickened, slowed, frightened, sickened, invisible (only the GM sees it);
-* persistent fire and bleed damage;
-* Shield, Mystic Armor and similar protections;
-* the Light spell;
-* other helpful or hindering spell effects, coloured by the caster's tradition.
+| Condition | Aura |
+| --- | --- |
+| Quickened | a gold ring with streaks racing around it |
+| Slowed | a clock face with one slow hand |
+| Frightened | dark violet wisps, and the token trembles |
+| Sickened | a queasy green haze |
+| Confused | little spirals wheeling over the head |
+| Stunned | stars circling the head |
+| Fascinated | slow hypnotic rings pulsing outward |
+| Dazzled | white glints flashing around the head |
+| Doomed | a dark shroud with red embers rising |
+| Paralyzed | held still under a pale, glassy film |
+| Petrified | grey stone with cracks over the whole token |
+| Restrained, Grabbed | two chains crossing the token |
+| Immobilized | roots holding the lower half |
+| Invisible | a faint shimmer, seen only by the GM |
+| Persistent damage | fire: flames · bleed: drops · acid: bubbling · cold: frost spikes and flakes · electricity: snapping arcs · poison: a heavy green mist |
 
-**In development:** auras for more conditions, such as confused, stunned, paralyzed, petrified, restrained, grabbed, doomed, dazzled, fascinated, and persistent acid, cold, electricity and poison damage.
+Also: Shield, Mystic Armor and similar protections (a force bubble); the Light spell (a lantern glow at the feet); and other spell effects, as a blessing or a hex coloured by the caster's tradition.
 
-Conditions that only change numbers or attitudes (off-guard, clumsy, enfeebled, friendly, hostile and the like) are left without an aura on purpose, so the map stays readable.
+Conditions that only change numbers or attitudes (off-guard, clumsy, enfeebled, drained, friendly, hostile and the like) are left without an aura on purpose, so the map stays readable. Visibility states (hidden, undetected, concealed) are left to Foundry.
 
 ### Strikes
 

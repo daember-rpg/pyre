@@ -830,6 +830,180 @@ void main(){
     float sweep = exp(-pow(fract(p.x*0.35 + p.y*0.35 - t*0.25) - 0.5, 2.0)*80.0);
     add += uTint*shell*(0.35 + hexEdge*0.8 + sweep*1.2);
     add += uTint*ring(r, R, 0.012)*1.2;
+  } else if(uStyle > 10.5){
+    float S = uStyle;
+    if(S < 11.5){
+      // Confused: three little spirals wheeling over the head, each turning its own way
+      for(int i = 0; i < 3; i++){
+        float fi = float(i);
+        float ang = PI*0.5 + (fi - 1.0)*0.75 + 0.18*sin(t*1.3 + fi*2.1);
+        vec2 c = vec2(cos(ang), sin(ang))*D*1.3;
+        vec2 q = p - c;
+        float rr = length(q), aa = atan(q.y, q.x)*(mod(fi, 2.0) < 0.5 ? 1.0 : -1.0);
+        float arm = abs(fract((aa + rr*48.0 - t*5.0)/(2.0*PI)) - 0.5);
+        float m = (1.0 - smoothstep(0.07, 0.15, arm))*(1.0 - smoothstep(0.085, 0.12, rr));
+        add += uTint*m*1.3;
+      }
+      add += uTint*ring(r, D*1.03, 0.015)*(0.35 + 0.25*sin(t*3.0));
+    } else if(S < 12.5){
+      // Stunned: little stars circling the head on a tilted orbit
+      for(int i = 0; i < 5; i++){
+        float fi = float(i);
+        float ang = t*2.2 + fi*2.0*PI/5.0;
+        vec2 c = vec2(cos(ang)*D*0.85, D*0.95 + sin(ang)*D*0.22);
+        float front = 0.55 + 0.45*sin(ang);
+        vec2 q = (p - c)/(0.075*(0.7 + 0.5*front));
+        float qa = atan(q.y, q.x) + t*3.0, qr = length(q);
+        float star = 1.0 - smoothstep(0.45 + 0.4*pow(abs(cos(qa*2.5)), 3.0), 0.55 + 0.45*pow(abs(cos(qa*2.5)), 3.0), qr);
+        add += mix(uTint, vec3(1.0), 0.35*star)*star*(0.6 + 0.8*front) + uTint*exp(-qr*qr*0.6)*0.15*front;
+      }
+    } else if(S < 13.5){
+      // Paralyzed: locked in a stiff, pale shell of angular shards that never moves
+      float k = floor(a/(2.0*PI)*18.0 + 9.0);
+      float jag = D*(1.04 + 0.1*hash(k + uSeed*31.0));
+      float shell = smoothstep(D*0.92, D*1.0, r)*(1.0 - smoothstep(jag - 0.012, jag, r));
+      // A pale, glassy film over the token: it is held still, not hurt
+      float film = (1.0 - smoothstep(D*0.97, D*1.0, r));
+      dark = max(shell*0.6, film*0.28); darkCol = uTint*0.75;
+      add += uTint*(shell*0.35 + ring(r, jag, 0.007)*1.4);
+      add += vec3(1.0)*pow(max(0.0, 1.0 - abs(p.x + p.y - 0.3 + 0.0*t)), 30.0)*film*0.25;
+    } else if(S < 14.5){
+      // Petrified: grey stone over the whole token, with cracks
+      float n = texture2D(uNoise, p*1.3 + uSeed).r;
+      float body = 1.0 - smoothstep(D*0.98, D*1.03, r);
+      float crack = 0.0;
+      for(int i = 0; i < 5; i++){
+        float fi = float(i);
+        float ca = hash(fi + uSeed*9.0)*2.0*PI;
+        vec2 dir = vec2(cos(ca), sin(ca));
+        float along = dot(p, dir), side = dot(p, vec2(-dir.y, dir.x)) + 0.03*sin(along*40.0 + fi);
+        crack = max(crack, (1.0 - smoothstep(0.004, 0.01, abs(side)))*step(0.0, along)*step(along, D*0.95));
+      }
+      dark = body*(0.62 + 0.15*n); darkCol = mix(vec3(0.42, 0.41, 0.39), vec3(0.6, 0.58, 0.55), n)*(1.0 - crack*0.7);
+      dark = max(dark, crack*body*0.9);
+      add += vec3(0.9)*ring(r, D*0.99, 0.01)*0.15;
+    } else if(S < 15.5){
+      // Restrained / grabbed: two chains crossing the token, links catching the light
+      for(int i = 0; i < 2; i++){
+        float ca = i == 0 ? 0.6 : -0.6;
+        vec2 dir = vec2(cos(ca), sin(ca)), nrm = vec2(-dir.y, dir.x);
+        float s = dot(p, dir), o = dot(p, nrm);
+        float lim = sqrt(max(D*D*1.25 - o*o, 0.0));
+        float on = step(abs(s), lim)*smoothstep(0.075, 0.05, abs(o));
+        float cell = s/0.1;
+        float idx = floor(cell);
+        vec2 lq = vec2(fract(cell) - 0.5, o/0.05);
+        float flat_ = mod(idx, 2.0);
+        vec2 e = flat_ > 0.5 ? lq*vec2(1.0, 1.6) : lq*vec2(1.6, 0.7);
+        float lr = length(e);
+        float link = smoothstep(0.62, 0.52, lr)*smoothstep(0.22, 0.32, lr);
+        float m = link*on;
+        dark = max(dark, m*0.9);
+        add += uTint*m*(0.45 + 1.1*pow(max(0.0, -lq.x + lq.y*0.3 + 0.2), 2.0));
+      }
+      darkCol = vec3(0.12, 0.11, 0.1);
+    } else if(S < 16.5){
+      // Immobilized: roots creeping up from the floor and holding the token's lower half
+      float n = texture2D(uNoise, vec2(a*1.6 + uSeed, r*2.2)).r;
+      float lower = smoothstep(0.1, -0.35, p.y/D);
+      float vine = 0.0;
+      for(int i = 0; i < 6; i++){
+        float fi = float(i);
+        float x0 = (hash(fi*3.7 + uSeed*5.0) - 0.5)*D*1.8;
+        float wob = 0.05*sin(p.y*22.0 + fi*1.7);
+        float d = abs(p.x - x0 - wob);
+        float top = -D*0.1 + 0.25*D*hash(fi + 2.0);
+        vine = max(vine, (1.0 - smoothstep(0.012, 0.022, d))*step(p.y, top)*step(-D*1.15, p.y));
+      }
+      float rim = smoothstep(D*1.25, D*0.95, r)*smoothstep(D*0.75, D*0.95, r)*lower*smoothstep(0.45, 0.6, n);
+      float m = max(vine*lower, rim);
+      dark = m*0.85; darkCol = mix(vec3(0.16, 0.11, 0.06), uTint*0.5, n);
+      add += uTint*m*0.12;
+    } else if(S < 17.5){
+      // Doomed: a dark shroud around the token, red embers rising from it
+      float n = texture2D(uNoise, vec2(a*0.35 + t*0.02, r*1.2 - t*0.08)).r;
+      float band = smoothstep(D*0.85, D*1.05, r)*(1.0 - smoothstep(D*1.15, D*1.6, r));
+      dark = band*smoothstep(0.35, 0.65, n)*0.8; darkCol = vec3(0.03, 0.0, 0.01);
+      for(int i = 0; i < 9; i++){
+        float h = hash(float(i)*4.1 + uSeed*2.0);
+        float life = fract(t*0.35 + h*3.0);
+        float ang = h*2.0*PI;
+        vec2 c = vec2(cos(ang), sin(ang))*D*1.1 + vec2(0.03*sin(t + h*9.0), life*0.35);
+        add += uTint*exp(-dot(p - c, p - c)/0.0004)*sin(life*PI)*1.6;
+      }
+    } else if(S < 18.5){
+      // Dazzled: white glints flashing on and off around the head
+      for(int i = 0; i < 8; i++){
+        float h = hash(float(i)*7.3 + uSeed*4.0);
+        float cyc = t*1.4 + h*6.0;
+        float k = floor(cyc), f = fract(cyc);
+        float ang = PI*0.5 + (hash(k + h*11.0) - 0.5)*2.4;
+        vec2 c = vec2(cos(ang), sin(ang))*D*(1.0 + 0.25*hash(k*1.3 + h));
+        vec2 q = p - c;
+        float flash = exp(-f*5.0)*step(0.0, f);
+        float cross_ = exp(-abs(q.x)*45.0)*exp(-q.y*q.y*1200.0) + exp(-abs(q.y)*45.0)*exp(-q.x*q.x*1200.0);
+        add += mix(uTint, vec3(1.0), 0.7)*(cross_*2.4 + exp(-dot(q, q)/0.0012)*1.5)*flash;
+      }
+    } else if(S < 19.5){
+      // Fascinated: slow hypnotic rings pulsing out from the token, with a twist
+      float w = r - D*0.95;
+      float waves = 0.5 + 0.5*sin(w*55.0 - t*3.0 + a*1.0);
+      float fade = smoothstep(0.0, 0.02, w)*(1.0 - smoothstep(D*0.25, D*0.75, w));
+      add += uTint*pow(waves, 6.0)*fade*0.8;
+      add += uTint*ring(r, D*1.02, 0.015)*(0.5 + 0.3*sin(t*2.0));
+    } else if(S < 20.5){
+      // Persistent acid: bubbles that swell on the rim and pop, drips running off
+      for(int i = 0; i < 10; i++){
+        float h = hash(float(i)*2.9 + uSeed*6.0);
+        float cyc = t*0.8 + h*5.0;
+        float f = fract(cyc), k = floor(cyc);
+        float ang = (hash(k*1.7 + h) - 0.5)*2.0*PI;
+        vec2 c = vec2(cos(ang), sin(ang))*D*(0.98 + 0.08*h);
+        float R = 0.012 + 0.03*f;
+        float d = length(p - c);
+        float bub = ring(d, R, 0.006)*(1.0 - smoothstep(0.85, 1.0, f)) + exp(-d*d/0.0002)*smoothstep(0.85, 0.95, f)*(1.0 - f)*8.0;
+        add += uTint*bub*1.1;
+      }
+      dark = ring(r, D*1.0, 0.03)*0.35; darkCol = uTint*0.2;
+      add += uTint*ring(r, D*1.0, 0.012)*0.4;
+    } else if(S < 21.5){
+      // Persistent cold: frost spikes around the rim and flakes drifting up
+      float k = floor(a/(2.0*PI)*28.0 + 14.0);
+      float h = hash(k + uSeed*17.0);
+      float fa = fract(a/(2.0*PI)*28.0) - 0.5;
+      float len = D*(0.08 + 0.18*h);
+      float spike = (1.0 - smoothstep(0.0, 0.5*(1.0 - (r - D)/len), abs(fa)))*step(D*0.98, r)*step(r, D + len);
+      add += uTint*spike*0.75 + uTint*ring(r, D*0.99, 0.02)*0.45;
+      dark = spike*0.3; darkCol = uTint*0.6;
+      for(int i = 0; i < 7; i++){
+        float hh = hash(float(i)*3.3 + uSeed);
+        float life = fract(t*0.25 + hh*2.0);
+        vec2 c = vec2((hh - 0.5)*D*2.0 + 0.03*sin(t*1.5 + hh*7.0), -D*0.6 + life*D*2.0);
+        add += vec3(0.95, 0.98, 1.0)*exp(-dot(p - c, p - c)/0.00012)*sin(life*PI)*1.2;
+      }
+    } else if(S < 22.5){
+      // Persistent electricity: short arcs snapping around the rim
+      for(int i = 0; i < 4; i++){
+        float fi = float(i);
+        float cyc = t*6.0 + fi*1.37 + uSeed*5.0;
+        float k = floor(cyc), f = fract(cyc);
+        float a0 = hash(k*3.1 + fi)*2.0*PI;
+        float da = a - a0; da = mod(da + PI, 2.0*PI) - PI;
+        float span = 0.7;
+        float jitter = (texture2D(uNoise, vec2(da*3.0 + k*0.37, fi*0.21)).r - 0.5)*0.12;
+        float on = step(abs(da), span*0.5)*step(f, 0.55);
+        float d = abs(r - D*(1.06 + jitter));
+        add += mix(uTint, vec3(1.0), 0.5)*exp(-d*d/0.00006)*on*1.6 + uTint*exp(-d*d/0.002)*on*0.35;
+      }
+      add += uTint*ring(r, D*1.0, 0.01)*(0.2 + 0.2*step(0.8, hash(floor(t*12.0))));
+    } else {
+      // Persistent poison: a heavy, dark green mist clinging low around the token
+      float n = texture2D(uNoise, p*0.7 + vec2(uSeed - t*0.03, t*0.02)).r;
+      float n2 = texture2D(uNoise, p*1.6 + vec2(t*0.05, uSeed)).g;
+      float mist = smoothstep(0.4, 0.75, n*0.7 + n2*0.3)*smoothstep(D*1.6, D*0.85, r)*smoothstep(D*0.4, D*0.9, r);
+      dark = mist*0.55; darkCol = uTint*0.35;
+      add += uTint*mist*0.18;
+    }
   } else if(uStyle > 9.5){
     // Lit (the Light spell): a warm pool of lantern light on the floor and a small flame bobbing beside the token
     float flick = 0.88 + 0.08*sin(t*7.3) + 0.05*sin(t*13.1 + 1.7) + 0.04*texture2D(uNoise, vec2(t*0.11, uSeed)).r;

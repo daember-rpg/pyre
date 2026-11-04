@@ -8,7 +8,13 @@ import { tokenFt, tokenRadiusFt } from "./tokens.js";
 function setting(key, fallback) { try { return game.settings.get(MODULE_ID, key); } catch { return fallback; } }
 const PLANE = new THREE.PlaneGeometry(1, 1);
 const MAX_PER_TOKEN = 3;
-const PRIORITY = ["shielded", "burning", "frightened", "slowed", "quickened", "hexed", "blessed", "lit", "bleeding", "sickened", "invisible"];
+// When a creature has many, the most telling ones show (up to three)
+const PRIORITY = ["petrified", "paralyzed", "stunned", "restrained", "immobilized", "shielded", "burning", "freezing", "shocked", "corroding",
+  "frightened", "confused", "fascinated", "doomed", "slowed", "quickened", "hexed", "blessed", "dazzled", "lit", "bleeding", "poisoned", "sickened", "invisible"];
+/** PF2e condition → aura, where the names differ */
+const CONDITION_AURA = { grabbed: "restrained" };
+/** Persistent damage type → aura */
+const PERSISTENT_AURA = { fire: "burning", bleed: "bleeding", acid: "corroding", cold: "freezing", electricity: "shocked", poison: "poisoned" };
 
 /** Which auras an actor should show, from its PF2e conditions and effects. */
 /** Spell effects that get their own aura instead of the generic blessing or hex. */
@@ -23,9 +29,9 @@ export function aurasFor(actor, token) {
     if (item.type === "condition") {
       if (slug === "persistent-damage") {
         const type = item.system?.persistent?.damageType;
-        if (type === "fire") out.set("burning", null);
-        else if (type === "bleed") out.set("bleeding", null);
-      } else if (AURAS[slug]) out.set(slug, null);
+        if (PERSISTENT_AURA[type]) out.set(PERSISTENT_AURA[type], null);
+      } else if (CONDITION_AURA[slug]) out.set(CONDITION_AURA[slug], null);
+      else if (AURAS[slug] && !Object.values(PERSISTENT_AURA).includes(slug)) out.set(slug, null);
     } else if (item.type === "effect") {
       if (/shield|mystic-armor|protective-ward/.test(slug)) { out.set("shielded", null); continue; }
       if (!slug.startsWith("spell-effect-")) continue;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+* **Thirteen new condition auras:** confused (spirals over the head), stunned (circling stars), fascinated (hypnotic rings), dazzled (flashing glints), doomed (dark shroud and red embers), paralyzed (a pale, glassy film), petrified (cracked grey stone), restrained and grabbed (crossing chains), immobilized (roots), and persistent acid, cold, electricity and poison damage.
+* When a creature has several, the most telling three show, with being held or turned to stone first.
+
 ## 1.0.0
 
 The first stable release. Everything from the 0.x versions, tested at the table:
