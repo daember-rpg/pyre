@@ -92,6 +92,10 @@ Property runes add their look to any strike: flaming, frost, shock, corrosive, t
 
   Force hits every material the same. Mental, spirit, poison, vitality, void and bleed damage do not harm walls.
 
+| A red dragon's breath stops at the wall | The GM confirms, and the walls give way |
+| --- | --- |
+| <img src="docs/media/breath-fire.gif" width="380" alt="A cone of fire from a red dragon, cut off by the wall in front of it"> | <img src="docs/media/breath-fire-walls.gif" width="380" alt="The walls the breath reached break: glass shatters, wood splinters"> |
+
 | A fireball breaks the walls it reaches | Restoring them: the rubble flies back |
 | --- | --- |
 | ![Walls bursting into planks and dust after the GM confirms](docs/media/walls-break.gif) | ![Broken walls rebuilding themselves](docs/media/walls-restore.gif) |
