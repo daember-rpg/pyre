@@ -11,6 +11,7 @@ The first stable release. Everything from the 0.x versions, tested at the table:
 * Edit many walls at once, Pyre Studio for tests and overrides, adaptive resolution and an animation speed setting.
 * All text in `lang/en.json`, ready for translation.
 * New cover image.
+* Conjure, the summoning module Pyre already supports, is still in development; the README says so, and it will be linked once it is public.
 
 ## 0.9.14
 

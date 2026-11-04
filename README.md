@@ -33,7 +33,7 @@ Then enable **Pyre** in your world. Foundry tells you when an update is availabl
 | A creature's breath weapon or other area ability | Recognised from the ability's own data: cone or line, element, size |
 | Weapon, unarmed and NPC strikes | A signature per weapon group (see below), tinted by property runes |
 | Conditions and spell effects on an actor | Lasting auras: quickened, slowed, frightened, sickened, burning, bleeding, shielded, invisible, blessed, hexed, light… |
-| A creature summoned with Conjure | Summon circle and arrival; dissolve on dismissal |
+| A creature summoned with Conjure (in development, see below) | Summon circle and arrival; dissolve on dismissal |
 
 Effects are worked out from the item's data: area, defense, damage types, traits, weapon group and runes. Every client plays the same effect from the same seed, without sockets.
 
@@ -170,7 +170,7 @@ Any key you leave out falls back to English. Pull requests with translations are
 * Foundry VTT V13 and V14.
 * Pathfinder 2e system; built and tested on 8.x.
 * Works with PF2e's Regions for placed areas.
-* Conjure: with both active, Conjure handles the summoning and Pyre draws it.
+* **Conjure** is a summoning module of ours that is still in development and not yet public. Pyre already supports it: with both active, Conjure handles the summoning and Pyre draws it. It will be linked here once it is released.
 
 ## For developers
 
