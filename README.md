@@ -32,7 +32,7 @@ Then enable **Pyre** in your world. Foundry tells you when an update is availabl
 | A spell without damage (Haste, Fear, Mystic Armor…) | The tradition's circle on the caster, then a blessing, hex or self glow |
 | A creature's breath weapon or other area ability | Recognised from the ability's own data: cone or line, element, size |
 | Weapon, unarmed and NPC strikes | A signature per weapon group (see below), tinted by property runes |
-| Conditions and spell effects on an actor | Lasting auras: quickened, slowed, frightened, sickened, burning, bleeding, shielded, invisible, blessed, hexed, light… |
+| Conditions and spell effects on an actor | Lasting auras for quickened, slowed, frightened, sickened, invisible, persistent fire and bleed damage, Shield and Mystic Armor, the Light spell, and helpful or hindering spell effects. More conditions are in development (see below) |
 | A creature summoned with Conjure (in development, see below) | Summon circle and arrival; dissolve on dismissal |
 
 Effects are worked out from the item's data: area, defense, damage types, traits, weapon group and runes. Every client plays the same effect from the same seed, without sockets.
@@ -40,6 +40,20 @@ Effects are worked out from the item's data: area, defense, damage types, traits
 | A black dragon's Breath Weapon, read from the ability's text | Lasting auras on conditions and spell effects, and the Light spell |
 | --- | --- |
 | ![An 80-foot line of acid from a black dragon](docs/media/breath-acid.gif) | ![Three lasting auras: a golden ring, a violet one, and soft lantern light at the feet](docs/media/auras.gif) |
+
+### Condition auras
+
+Pyre gives a lasting aura to the conditions that change how a creature looks or moves:
+
+* quickened, slowed, frightened, sickened, invisible (only the GM sees it);
+* persistent fire and bleed damage;
+* Shield, Mystic Armor and similar protections;
+* the Light spell;
+* other helpful or hindering spell effects, coloured by the caster's tradition.
+
+**In development:** auras for more conditions, such as confused, stunned, paralyzed, petrified, restrained, grabbed, doomed, dazzled, fascinated, and persistent acid, cold, electricity and poison damage.
+
+Conditions that only change numbers or attitudes (off-guard, clumsy, enfeebled, friendly, hostile and the like) are left without an aura on purpose, so the map stays readable.
 
 ### Strikes
 
