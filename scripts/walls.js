@@ -295,7 +295,11 @@ export function injectWallConfig(app, html) {
   const others = (canvas.walls?.controlled ?? []).filter((w) => w.document.id !== doc.id).length;
   const box = document.createElement("fieldset");
   box.className = "pyre-wall-section";
-  const opts = [`<option value="">${t("Walls.SceneDefault", { name: materialName(sceneMaterial(doc.parent)) })}</option>`]
+  // What "no material of its own" means for this one: doors are wood, windows glass, other walls the scene's material
+  const kind = wallKind(doc);
+  const defMat = kind === "door" ? "wood" : kind === "window" ? "glass" : sceneMaterial(doc.parent);
+  const defLabel = kind === "wall" ? t("Walls.SceneDefault", { name: materialName(defMat) }) : t(`Walls.KindDefault.${kind}`, { name: materialName(defMat) });
+  const opts = [`<option value="">${defLabel}</option>`]
     .concat(Object.keys(MATERIALS).map((id) => `<option value="${id}" ${id === curMat ? "selected" : ""}>${materialLabel(id)}</option>`));
   const num = (v) => (Number.isFinite(v) ? v : "∞");
   box.innerHTML = `<legend><i class="fa-solid fa-dungeon"></i> ${t("Walls.Section")}</legend>
@@ -367,7 +371,7 @@ async function batchDialog() {
   const targetOpts = Object.entries(groups).map(([id, list]) =>
     `<option value="${id}" ${id === first ? "selected" : ""} ${list.length ? "" : "disabled"}>${t(`Batch.Target.${id}`, { n: list.length })}</option>`).join("");
   const matOpts = [`<option value="keep">${t("Batch.KeepMaterial")}</option>`,
-    `<option value="">${t("Walls.SceneDefault", { name: materialName(sceneMaterial()) })}</option>`]
+    `<option value="">${t("Batch.Default", { name: materialName(sceneMaterial()) })}</option>`]
     .concat(Object.keys(MATERIALS).map((id) => `<option value="${id}">${materialLabel(id)}</option>`)).join("");
   const content = `<div class="pyre-batch standard-form">
     <div class="form-group"><label>${t("Batch.Apply")}</label><div class="form-fields"><select name="target">${targetOpts}</select></div></div>

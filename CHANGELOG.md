@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.13
+
+* The Pyre section of a door's sheet said "Scene default (Glass)" on a scene whose walls are glass, though a door without a material of its own is wood. It now says "Default for doors (Wood)", and a window's sheet "Default for windows (Glass)". The "edit many walls" window spells out the same rule.
+
 ## 0.9.12
 
 * README: clips of a dragon's acid breath and of lasting auras and the Light spell.

@@ -391,6 +391,10 @@
       "Updated": {
         "Many": "Pyre: {n} walls updated.",
         "One": "Pyre: wall updated."
+      },
+      "KindDefault": {
+        "door": "Default for doors ({name})",
+        "window": "Default for windows ({name})"
       }
     },
     "Weapon": {
@@ -430,7 +434,8 @@
       "Repair": "Back to full HP",
       "Hint": "A new material brings its own Hardness and HP. Type numbers to use your own instead; leave them empty to keep what each wall has.",
       "Cancel": "Cancel",
-      "NoWalls": "Pyre: no walls to change. Select some on the Walls layer, or pick another group."
+      "NoWalls": "Pyre: no walls to change. Select some on the Walls layer, or pick another group.",
+      "Default": "Default: {name} for walls, wood for doors, glass for windows"
     }
   }
 }
