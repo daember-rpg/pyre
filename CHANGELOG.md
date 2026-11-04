@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0
+
+The first stable release. Everything from the 0.x versions, tested at the table:
+
+* Spell areas, rays, bolts, darts, chains and cast glows read from each spell's own data; breath weapons and other creature abilities read from the ability.
+* A signature for every weapon group, natural attacks and bombs, with up to three property runes.
+* Lasting auras for conditions and spell effects.
+* Walls stop areas, and particles bounce off them. Walls, doors and windows can break, by material and damage type, with the GM's confirmation, rubble left on the floor and a one-click restore.
+* Edit many walls at once, Pyre Studio for tests and overrides, adaptive resolution and an animation speed setting.
+* All text in `lang/en.json`, ready for translation.
+* New cover image.
+
 ## 0.9.14
 
 * README: a red dragon's breath stopped by a wall, and the walls breaking after the GM confirms.
