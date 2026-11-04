@@ -2,7 +2,7 @@
 
 ## 0.9.12
 
-* README: clips of a dragon's acid breath and of lasting auras (blessing, hex, Light).
+* README: clips of a dragon's acid breath and of lasting auras and the Light spell.
 
 ## 0.9.11
 
