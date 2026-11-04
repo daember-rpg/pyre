@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.12
+
+* README: clips of a dragon's acid breath and of lasting auras (blessing, hex, Light).
+
 ## 0.9.11
 
 * README with a cover image, clips of fireballs, strikes, runes and breaking and restoring walls, and screenshots of Pyre Studio and the wall tools. The cover also shows on Foundry's package page.

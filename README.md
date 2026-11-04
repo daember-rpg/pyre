@@ -37,6 +37,10 @@ Then enable **Pyre** in your world. Foundry tells you when an update is availabl
 
 Effects are worked out from the item's data: area, defense, damage types, traits, weapon group and runes. Every client plays the same effect from the same seed, without sockets.
 
+| A black dragon's Breath Weapon, read from the ability's text | Lasting auras: blessed, hexed, and the Light spell |
+| --- | --- |
+| ![An 80-foot line of acid from a black dragon](docs/media/breath-acid.gif) | ![Three tokens: a golden blessing, a violet hex, and soft lantern light at the feet](docs/media/auras.gif) |
+
 ### Strikes
 
 Each weapon group has its own signature:
