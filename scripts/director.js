@@ -91,6 +91,7 @@ export class Director {
     }
     req.targets = this.bystanders([caster]);
     req.seed = seed;
+    req.heal = plan.healing ? plan.element : null;
     debug("template", plan.slug, req.recipe, plan.element);
     this.#add(new AreaEffect(this.overlay, this.fx, req));
   }
@@ -105,18 +106,24 @@ export class Director {
     const look = plan.look;
     const recipe = plan.engineRecipe;
     if (recipe === "chain") {
-      const chain = [this.edge(c, list[0].ft), ...list.map((t) => t.ft.clone())];
-      // Leap on to the nearest creatures not yet struck, within 30 ft
-      const struck = new Set(list.map((t) => t.token.id));
-      let cur = list[list.length - 1];
-      const chainTargets = [...list];
-      const others = this.bystanders([caster]).filter((t) => !struck.has(t.token.id));
-      while (others.length && chain.length < 7) {
-        others.sort((a, b) => a.ft.distanceTo(cur.ft) - b.ft.distanceTo(cur.ft));
-        if (others[0].ft.distanceTo(cur.ft) > 30) break;
-        cur = others.shift();
-        chain.push(cur.ft.clone()); chainTargets.push(cur);
+      // The caster chooses who the lightning jumps to (Chain Lightning: "you can choose to have it arc"), so it never
+      // picks targets on its own among the caster's friends.
+      // Several targets: the arc runs through exactly those, each hop to the nearest one not yet struck.
+      // One target: it jumps on only to the caster's enemies, each within 30 ft of the last.
+      const D = CONST.TOKEN_DISPOSITIONS;
+      const side = caster.document?.disposition ?? D.NEUTRAL;
+      const enemy = (t) => (side === D.FRIENDLY && t.token.document.disposition === D.HOSTILE)
+        || (side === D.HOSTILE && t.token.document.disposition === D.FRIENDLY);
+      let cur = list[0];
+      const chainTargets = [cur];
+      const pool = list.length > 1 ? list.slice(1) : this.bystanders([caster]).filter((t) => t.token.id !== cur.token.id && enemy(t));
+      while (pool.length && chainTargets.length < 7) {
+        pool.sort((a, b) => a.ft.distanceTo(cur.ft) - b.ft.distanceTo(cur.ft));
+        if (list.length === 1 && pool[0].ft.distanceTo(cur.ft) > 30) break;
+        cur = pool.shift();
+        chainTargets.push(cur);
       }
+      const chain = [this.edge(c, chainTargets[0].ft), ...chainTargets.map((t) => t.ft.clone())];
       this.#add(new AreaEffect(this.overlay, this.fx, { recipe: "chain", look, from: chain[0], to: chain[1], chain, chainTargets, seed }));
       return;
     }
@@ -126,7 +133,7 @@ export class Director {
         this.#add(new AreaEffect(this.overlay, this.fx, { recipe: "darts", look, from: this.edge(c, t.ft), to: t.ft.clone(), mainTarget: t, darts: look.darts ?? 3, seed: s }));
       } else if (recipe === "point") {
         // Pulse on the creature (Heal, Harm and other targeted bursts)
-        this.#add(new AreaEffect(this.overlay, this.fx, { recipe: "point", look, at: t.ft.clone(), radius: Math.max(3, t.r * 1.6), targets: [t], seed: s }));
+        this.#add(new AreaEffect(this.overlay, this.fx, { recipe: "point", look, at: t.ft.clone(), radius: Math.max(3, t.r * 1.6), targets: [t], seed: s, heal: plan.healing ? plan.element : null }));
       } else {
         const out = recipe === "ray" && plan.recipe === "bolt" ? "hidden" : outcome;
         this.#add(new AreaEffect(this.overlay, this.fx, { recipe: "ray", look, from: this.edge(c, t.ft), to: t.ft.clone(), mainTarget: t, outcome: out, seed: s }));

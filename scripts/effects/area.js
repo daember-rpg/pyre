@@ -357,6 +357,13 @@ export class AreaEffect {
   #applyHit(h) {
     const p = this.p;
     const flashCol = mixA(this.colors.light, [1, 1, 1], 0.55).map((v) => v * 1.5);
+    // Healing: vitality mends the living and hurts undead; void (Harm) the other way round. Mended creatures glow.
+    if (this.req.heal) {
+      const traits = h.t.token?.actor?.system?.traits?.value ?? [];
+      const undead = traits.includes("undead") || traits.includes("void");
+      const mends = this.req.heal === "void" ? undead : !undead;
+      if (mends) { this.fx.pulse(h.t.token, 1.07, p.flash * 0.6, flashCol); return; }
+    }
     const tremble = h.sustained && !this.o.reduceMotion ? { amp: 0.09 * p.knockback, ms: p.emit * 1000 } : null;
     this.fx.react(h.t.token, new THREE.Vector2(h.dx, h.dy), h.mag, {
       knockback: p.knockback, dodge: h.dodge, flash: h.dodge ? 0 : p.flash * Math.min(1.3, h.mag), flashCol, tremble,

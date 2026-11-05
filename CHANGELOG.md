@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+* **Chain Lightning no longer jumps to allies.** The caster chooses who the lightning arcs to, so Pyre no longer picks targets on its own among friends. With several targets, the arc runs through exactly those. With one target, it jumps on only to the caster's enemies (never allies or neutral creatures), each within 30 feet of the last.
+* **Healing spells no longer make the creatures they mend flinch.** Heal and other vitality healing make the living glow, and still hurt undead; Harm the other way round.
+
 ## 1.1.0
 
 * **Thirteen new condition auras:** confused (spirals over the head), stunned (circling stars), fascinated (hypnotic rings), dazzled (flashing glints), doomed (dark shroud and red embers), paralyzed (a pale, glassy film), petrified (cracked grey stone), restrained and grabbed (crossing chains), immobilized (roots), and persistent acid, cold, electricity and poison damage.

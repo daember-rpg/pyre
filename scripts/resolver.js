@@ -207,6 +207,8 @@ export function resolveSpell(item, ctx = {}) {
     look: { ...look, element, material: material ?? "stone", custom: !!custom, core: custom?.core ?? look.core, glow: custom?.glow ?? look.glow },
     radius: area?.value ?? null, areaType: area?.type ?? null, steps, traits, tradition,
     multi: /\b(or 2|1 or 2|up to|creatures)\b/.test(target),
+    // Healing spells (Heal, Harm): the creatures they mend should glow, not flinch
+    healing: !!healing,
   };
 }
 
