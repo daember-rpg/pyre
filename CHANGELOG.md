@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+* Fixed: a spell could play twice, once when cast and again later. Only the cast card itself plays a spell now; saving throws, applied damage and other cards that carry the spell as their origin no longer replay it.
+* Fixed: a cast that waited for its damage roll (cast before choosing targets) could linger and play again when the same spell was cast later with targets. A new cast of the same spell now replaces it.
+
 ## 1.1.1
 
 * **Chain Lightning no longer jumps to allies.** The caster chooses who the lightning arcs to, so Pyre no longer picks targets on its own among friends. With several targets, the arc runs through exactly those. With one target, it jumps on only to the caster's enemies (never allies or neutral creatures), each within 30 feet of the last.

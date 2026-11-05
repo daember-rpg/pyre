@@ -244,6 +244,9 @@ async function onChatMessage(message) {
 
   // Spell cast cards
   if (!origin || origin.type !== "spell") return;
+  // Only the cast card itself. Saving throws, applied damage and other cards that carry the spell as their origin
+  // (and its roll options) would otherwise replay the spell once per card.
+  if (ctx?.type && ctx.type !== "spell-cast") return;
   // PF2e marks a real cast with a roll option, but casts from other tools (Triad, macros) can arrive without it.
   // A card from a spellcasting entry, or one with a spell-cast context, counts as a cast.
   const isCast = (origin.rollOptions ?? []).includes(CAST_OPTION) || ctx?.type === "spell-cast" || !!pf2e.casting;
@@ -263,6 +266,8 @@ async function onChatMessage(message) {
     director.playGlow({ plan, caster, targets, seed, conjureActive: conjureActive() });
     return;
   }
+  // A new cast replaces an older one of the same spell that was still waiting for its damage roll
+  untargetedCasts.delete(castKey(message, origin));
   if (plan.areaType) return castArea(message, item, plan, caster, targets, seed);
   if (!targets.length) {
     untargetedCasts.set(castKey(message, origin), { plan, caster, name: item.name, at: Date.now() });
