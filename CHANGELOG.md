@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4
+
+* Fixed: auras could stay on screen after moving to another scene, floating where the previous scene's creatures stood. An aura now belongs to a token on the scene being shown, and disappears the moment that is no longer true (scene change, a condition update arriving mid-change, a torn-down token).
+* Clearing everything on a scene change no longer stops halfway if one part fails.
+
 ## 1.1.3
 
 * **Scene levels (Foundry V14).** Pyre now follows the floor you are viewing:

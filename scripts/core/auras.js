@@ -25,6 +25,15 @@ export function onViewedLevel(token) {
   return !lvl || !viewed || lvl === viewed;
 }
 
+/** The token belongs to the scene on the canvas right now (not to one we just left). */
+export function onThisScene(token) {
+  if (!canvas?.ready || !token?.document) return false;
+  const scene = token.document.parent;
+  if (scene && canvas.scene && scene.id !== canvas.scene.id) return false;
+  const live = canvas.tokens?.get?.(token.id);
+  return live === undefined ? true : live === token;
+}
+
 /** Which auras an actor should show, from its PF2e conditions and effects. */
 /** Spell effects that get their own aura instead of the generic blessing or hex. */
 const SPELL_AURAS = { "spell-effect-light": "lit", "spell-effect-dancing-lights": "lit" };
@@ -73,7 +82,7 @@ export class AuraManager {
 
   /** Recompute auras for one token. */
   refresh(token) {
-    if (!token || token.destroyed) return;
+    if (!token || token.destroyed || !onThisScene(token)) return;
     const mode = setting("auras", "everyone");
     let want = new Map();
     if (mode !== "off") {
@@ -127,7 +136,8 @@ export class AuraManager {
     const intensity = setting("intensity", 1);
     for (const [id, entry] of this.tokens) {
       const token = entry.token;
-      const gone = !token || token.destroyed || !token.mesh;
+      // A token from a scene we left (or one being torn down) is gone, whatever state its object is in
+      const gone = !token || token.destroyed || !token.mesh || !onThisScene(token);
       const visible = !gone && token.visible !== false && token.mesh.visible !== false && token.mesh.worldVisible !== false
         && onViewedLevel(token) && !(token.document.hidden && !game.user.isGM);
       for (const [key, a] of entry.auras) {

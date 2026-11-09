@@ -336,10 +336,11 @@ export class Director {
     this.#add(new WallEffect(o, { a, b, material, side, rebuild, cause, kind }));
   }
 
+  /** Clear everything (scene change). Each part on its own, so one failing never leaves the others on screen. */
   reset() {
-    this.overlay.reset();
-    this.fx.reset();
-    this.auras.reset();
+    for (const part of [this.overlay, this.fx, this.auras]) {
+      try { part.reset(); } catch (err) { console.warn("pyre | reset", err); }
+    }
   }
 }
 

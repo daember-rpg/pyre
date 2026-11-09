@@ -147,12 +147,14 @@ export class TokenFX {
 
   #drop(id, st) {
     const mesh = st.token?.mesh;
-    if (mesh && !mesh.destroyed && st.base) {
-      mesh.position.set(st.base.x, st.base.y);
-      mesh.scale.set(st.base.sx, st.base.sy);
-      mesh.rotation = st.base.r;
-    }
-    try { st.token?.renderFlags?.set?.({ refreshPosition: true, refreshMesh: true, refreshSize: true }); } catch { /* older API */ }
+    try {
+      if (mesh && !mesh.destroyed && mesh.transform && st.base) {
+        mesh.position.set(st.base.x, st.base.y);
+        mesh.scale.set(st.base.sx, st.base.sy);
+        mesh.rotation = st.base.r;
+      }
+      st.token?.renderFlags?.set?.({ refreshPosition: true, refreshMesh: true, refreshSize: true });
+    } catch { /* token already torn down */ }
     this.overlay.scene.remove(st.flashMesh);
     st.flashMesh.material.dispose();
     this.states.delete(id);
