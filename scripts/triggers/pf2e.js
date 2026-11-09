@@ -524,6 +524,7 @@ export function registerTriggers() {
     setTimeout(() => Director.get().auras.refreshAll(), 250);
   });
   Hooks.on("canvasTearDown", () => Director.get().reset());
+  Hooks.on("canvasInit", () => Director.get().reset());
 
   // Scene levels: when the viewed floor changes, show that floor's auras and marks only
   let viewedLevel = null;

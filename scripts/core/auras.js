@@ -28,6 +28,9 @@ export function onViewedLevel(token) {
 /** The token belongs to the scene on the canvas right now (not to one we just left). */
 export function onThisScene(token) {
   if (!canvas?.ready || !token?.document) return false;
+  // Torn-down or detached tokens (their object no longer hangs in the canvas)
+  if (token.destroyed || token.mesh?.destroyed || token.parent === null || token.mesh?.parent === null) return false;
+  if (token.layer && canvas.tokens && token.layer !== canvas.tokens) return false;
   const scene = token.document.parent;
   if (scene && canvas.scene && scene.id !== canvas.scene.id) return false;
   const live = canvas.tokens?.get?.(token.id);
@@ -166,6 +169,15 @@ export class AuraManager {
       if (!entry.auras.size) this.tokens.delete(id);
     }
     return any;
+  }
+
+  /** For troubleshooting: every aura being drawn, with its token and why it is (or isn't) shown. */
+  list() {
+    return [...this.tokens.values()].map(({ token, auras }) => ({
+      token: token?.name, id: token?.id, tokenScene: token?.document?.parent?.id ?? null, canvasScene: canvas?.scene?.id ?? null,
+      level: token?.document?.level ?? null, viewedLevel: canvas?.level?.id ?? null, onThisScene: onThisScene(token),
+      destroyed: !!token?.destroyed, attached: token?.parent !== null, visible: token?.visible, auras: [...auras.keys()],
+    }));
   }
 
   reset() {

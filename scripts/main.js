@@ -21,6 +21,8 @@ Hooks.once("ready", () => {
     resolveStrike,
     /** Play a standard preset from a token at others: api.preset("std-fireball", caster, [target]) */
     preset: (id, caster, targets = []) => Director.get().playPreset(id, caster, targets),
+    /** Troubleshooting: console.table(game.modules.get("pyre").api.auras()) */
+    auras: () => Director.get().auras.list(),
   };
   if (canvas?.ready) setTimeout(() => Director.get().auras.refreshAll(), 300);
   const version = mod.version ?? mod.data?.version ?? "?";

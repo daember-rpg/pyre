@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.5
+
+* Auras: stricter checks that the token is still part of the canvas being shown (not torn down, detached or from another layer), and everything is cleared again when a new canvas starts.
+* Troubleshooting: `console.table(game.modules.get("pyre").api.auras())` lists every aura being drawn and its token.
+
 ## 1.1.4
 
 * Fixed: auras could stay on screen after moving to another scene, floating where the previous scene's creatures stood. An aura now belongs to a token on the scene being shown, and disappears the moment that is no longer true (scene change, a condition update arriving mid-change, a torn-down token).
