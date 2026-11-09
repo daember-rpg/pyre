@@ -56,7 +56,15 @@ export class Director {
     return info.ft.clone().addScaledVector(d.normalize(), info.r);
   }
 
+  /** Scene levels: true when every given token stands on another floor than the one I am viewing. */
+  #offLevel(...tokens) {
+    const viewed = canvas?.level?.id;
+    const present = tokens.filter((t) => t?.document);
+    return !!viewed && present.length > 0 && present.every((t) => t.document.level && t.document.level !== viewed);
+  }
+
   #visibleToMe(...tokens) {
+    if (this.#offLevel(...tokens)) return false;
     if (game.user.isGM) return true;
     return tokens.some((t) => t && t.visible !== false && !t.document?.hidden);
   }
@@ -71,6 +79,7 @@ export class Director {
   /** Spell with a template (cone, line, burst, emanation, cylinder, square). */
   playTemplate({ item, plan, caster, shape, seed }) {
     if (!this.enabled || !plan || plan.kind === "none") return;
+    if (caster && this.#offLevel(caster)) return;   // another floor
     const c = this.info(caster);
     let req;
     const look = plan.look ?? PRESETS["std-fireball"];

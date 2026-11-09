@@ -16,6 +16,15 @@ const CONDITION_AURA = { grabbed: "restrained" };
 /** Persistent damage type → aura */
 const PERSISTENT_AURA = { fire: "burning", bleed: "bleeding", acid: "corroding", cold: "freezing", electricity: "shocked", poison: "poisoned" };
 
+/**
+ * Scene levels (Foundry V14): a token on another floor than the one being viewed is not drawn, and neither is its aura.
+ * Without levels (or before V14) every token counts as on the viewed level.
+ */
+export function onViewedLevel(token) {
+  const lvl = token?.document?.level, viewed = canvas?.level?.id;
+  return !lvl || !viewed || lvl === viewed;
+}
+
 /** Which auras an actor should show, from its PF2e conditions and effects. */
 /** Spell effects that get their own aura instead of the generic blessing or hex. */
 const SPELL_AURAS = { "spell-effect-light": "lit", "spell-effect-dancing-lights": "lit" };
@@ -119,7 +128,8 @@ export class AuraManager {
     for (const [id, entry] of this.tokens) {
       const token = entry.token;
       const gone = !token || token.destroyed || !token.mesh;
-      const visible = !gone && token.visible !== false && token.mesh.visible !== false && !(token.document.hidden && !game.user.isGM);
+      const visible = !gone && token.visible !== false && token.mesh.visible !== false && token.mesh.worldVisible !== false
+        && onViewedLevel(token) && !(token.document.hidden && !game.user.isGM);
       for (const [key, a] of entry.auras) {
         if (gone) a.target = 0;
         a.life += (a.target - a.life) * Math.min(1, dt * (a.target ? 4 : 2.5));

@@ -25,7 +25,9 @@ export const SCAR_ELEMENTS = new Set(Object.keys(LOOK));
 export async function addScars(list) {
   if (!game.user.isGM || !canvas?.scene || !list?.length) return;
   const cur = canvas.scene.getFlag(MODULE_ID, "scars") ?? [];
-  const next = cur.concat(list).slice(-MAX_SCARS);
+  // Marks belong to the floor they were made on (scene levels)
+  const lv = canvas.level?.id ?? null;
+  const next = cur.concat(list.map((sc) => (sc.lv === undefined && lv ? { ...sc, lv } : sc))).slice(-MAX_SCARS);
   await canvas.scene.setFlag(MODULE_ID, "scars", next);
 }
 export async function clearScars() {
@@ -38,7 +40,9 @@ export class ScarLayer {
 
   refresh() {
     try {
-      const scars = canvas?.scene?.getFlag?.(MODULE_ID, "scars") ?? canvas?.scene?.flags?.[MODULE_ID]?.scars ?? [];
+      const viewed = canvas?.level?.id ?? null;
+      const scars = (canvas?.scene?.getFlag?.(MODULE_ID, "scars") ?? canvas?.scene?.flags?.[MODULE_ID]?.scars ?? [])
+        .filter((sc) => !sc.lv || !viewed || sc.lv === viewed);
       if (!scars.length || !canvas?.primary || !globalThis.PIXI?.Texture) { if (this.holder) this.holder.visible = false; return; }
       const W = canvas.dimensions.width, H = canvas.dimensions.height;
       const s = Math.min(0.5, 4096 / Math.max(W, H));

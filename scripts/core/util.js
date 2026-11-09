@@ -75,6 +75,13 @@ export const BLEND = {
  * Walls near a point, for the particle bounce: segments in feet (x1, y1, x2, y2) that block movement and are not open doors.
  * Writes into a uniform set { uWalls: [Vector4 x24], uWallN, uBounce }.
  */
+/** Scene levels: a wall listed for some levels only applies on those; a wall with none applies everywhere. */
+export function onLevel(wallDoc, levelId) {
+  if (!levelId) return true;
+  const lv = wallDoc?.levels ? [...wallDoc.levels] : [];
+  return !lv.length || lv.includes(levelId);
+}
+
 export function setWalls(U, overlay, centerFt, radiusFt) {
   U.uWallN.value = 0;
   try {
@@ -88,6 +95,7 @@ export function setWalls(U, overlay, centerFt, radiusFt) {
       if (!c || c.length < 4) continue;
       if (d.move === 0) continue;                       // does not block movement
       if (d.door > 0 && d.ds === 1) continue;            // open door
+      if (!onLevel(d, canvas?.level?.id)) continue;       // belongs to another floor
       // Distance from the center to the segment
       const ex = c[2] - c[0], ey = c[3] - c[1], L2 = ex * ex + ey * ey || 1;
       const t = Math.max(0, Math.min(1, ((cx - c[0]) * ex + (cy - c[1]) * ey) / L2));

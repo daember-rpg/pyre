@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.3
+
+* **Scene levels (Foundry V14).** Pyre now follows the floor you are viewing:
+  * auras of creatures on another floor are hidden, and switch as you change floors;
+  * spells and strikes on another floor do not play on yours;
+  * lasting marks and rubble stay on the floor they were made on;
+  * walls that belong to other floors no longer stop areas, bounce sparks, or break.
+
 ## 1.1.2
 
 * Fixed: a spell could play twice, once when cast and again later. Only the cast card itself plays a spell now; saving throws, applied damage and other cards that carry the spell as their origin no longer replay it.

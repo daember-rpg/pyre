@@ -2,6 +2,7 @@ import { MODULE_ID, report } from "./constants.js";
 import { Director } from "./director.js";
 import { addScars } from "./core/scars.js";
 import { t, tn } from "./i18n.js";
+import { onLevel } from "./core/util.js";
 
 /*
  * Breakable walls (optional, GM only).
@@ -108,9 +109,9 @@ function crosses(ax, ay, bx, by, c) {
 }
 
 /** Walls the blast actually reaches: some part inside the area, with nothing else blocking the way from its origin. */
-export function wallsReached(shape) {
+export function wallsReached(shape, levelId = canvas?.level?.id ?? null) {
   const A = areaInPx(shape);
-  const walls = (canvas?.walls?.placeables ?? []).map((w) => w.document ?? w).filter((d) => d.c && blocks(d) && !isBroken(d));
+  const walls = (canvas?.walls?.placeables ?? []).map((w) => w.document ?? w).filter((d) => d.c && blocks(d) && !isBroken(d) && onLevel(d, levelId));
   const out = [];
   for (const d of walls) {
     const c = d.c, len = Math.hypot(c[2] - c[0], c[3] - c[1]);
@@ -167,7 +168,7 @@ export async function onDamageRoll(message, area) {
   if (!total) return;
   const useful = types.length ? types.filter((t) => !NO_EFFECT.has(t)) : ["untyped"];
   if (!useful.length) return report("Walls", ["this damage does not harm objects"]);
-  const reached = wallsReached(area.shape);
+  const reached = wallsReached(area.shape, area.levelId ?? canvas?.level?.id ?? null);
   if (!reached.length) return;
   const rows = reached.map((d) => {
     const S = wallStats(d), mat = S.mat;
@@ -247,6 +248,10 @@ async function postRestoreCard(docs) {
 export function onWallUpdate(doc, changes) {
   const f = changes?.flags?.[MODULE_ID];
   if (!f || doc.parent?.id !== canvas.scene?.id) return;
+  // Scene levels: a wall that belongs to other floors only does not animate on this one
+  const viewed = canvas.level?.id;
+  const lv = doc.levels ? [...doc.levels] : [];
+  if (viewed && lv.length && !lv.includes(viewed)) return;
   if (f.broken) Director.get().playCollapse(doc.c, f.broken.material ?? wallMaterial(doc), f.broken.from ?? null, f.broken.cause ?? null, f.broken.kind ?? "wall");
   else if (f.restored || "-=broken" in f) Director.get().playRebuild(doc.c, wallMaterial(doc), wallKind(doc));
 }

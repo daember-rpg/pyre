@@ -42,7 +42,7 @@ function rememberArea(item, plan, shape, caster) {
   const o = Director.get().overlay;
   const op = o.toPx(shape.center ?? shape.origin);
   recentAreas.set(key, { shape, plan, name: item.name, at: Date.now(), sceneId: canvas.scene?.id, originPx: [op.x, op.y],
-    itemId: item.id ?? itemIdOf(key), slug: item.slug ?? item.system?.slug ?? null, tokenId: caster?.id ?? null, actorId: item.actor?.id ?? caster?.actor?.id ?? null });
+    itemId: item.id ?? itemIdOf(key), slug: item.slug ?? item.system?.slug ?? null, tokenId: caster?.id ?? null, actorId: item.actor?.id ?? caster?.actor?.id ?? null, levelId: caster?.document?.level ?? canvas.level?.id ?? null });
   for (const [k, v] of recentAreas) if (Date.now() - v.at > 10 * 60 * 1000) recentAreas.delete(k);
   leaveMarks(plan, shape, caster).catch(() => {});
 }
@@ -524,6 +524,16 @@ export function registerTriggers() {
     setTimeout(() => Director.get().auras.refreshAll(), 250);
   });
   Hooks.on("canvasTearDown", () => Director.get().reset());
+
+  // Scene levels: when the viewed floor changes, show that floor's auras and marks only
+  let viewedLevel = null;
+  setInterval(() => {
+    const id = canvas?.ready ? (canvas.level?.id ?? null) : null;
+    if (id === viewedLevel) return;
+    viewedLevel = id;
+    if (!canvas?.ready) return;
+    try { Director.get().scars.refresh(); Director.get().auras.refreshAll(); } catch (err) { fail("level change", err); }
+  }, 400);
 
   // Conjure hand-off: Conjure places the creature, Pyre animates it.
   Hooks.on("createToken", (doc) => {
