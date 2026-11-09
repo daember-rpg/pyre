@@ -288,8 +288,18 @@ export class Overlay {
     else if (this.fast > 2.5 && this.adapt < 1) { this.adapt = Math.min(1, this.adapt + 0.1); this.fast = 0; }
   }
 
+  /** Wipe the effects layer: the last frame drawn would otherwise stay on screen (over the next scene). */
+  #clearScreen() {
+    try {
+      this.renderer.setRenderTarget(null);
+      this.renderer.clear();
+    } catch { /* renderer not ready */ }
+    if (this.gHolder) this.gHolder.visible = false;
+  }
+
   #frame(now) {
-    if (!canvas?.ready) { this.running = false; return; }
+    // The scene is being changed: stop, and leave nothing behind
+    if (!canvas?.ready) { this.running = false; this.#clearScreen(); return; }
     const raw = (now - this.last) / 1000;
     // Animation speed (per player): below 1 every effect plays slower, giving it more time to read
     const pace = Math.max(0.4, Math.min(1.6, Number(setting("pace", 0.85)) || 0.85));
@@ -321,9 +331,7 @@ export class Overlay {
     if (busy) requestAnimationFrame((n) => this.#frame(n));
     else {
       this.running = false;
-      this.renderer.setRenderTarget(null);
-      this.renderer.clear();
-      if (this.gHolder) this.gHolder.visible = false;
+      this.#clearScreen();
     }
   }
 
@@ -363,8 +371,8 @@ export class Overlay {
   /** Remove everything (scene change). */
   reset() {
     for (const e of this.effects) { try { e.dispose(); } catch { /* ignore */ } }
-    if (this.gHolder) this.gHolder.visible = false;
     this.effects.clear();
+    this.#clearScreen();
     for (const t of this.tickers) { try { t.reset?.(); } catch { /* ignore */ } }
     const board = canvas?.app?.view;
     if (board) board.style.transform = "";

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.6
+
+* Fixed: after changing scenes, the auras of the previous scene could stay on screen as a still picture. The effects layer stopped drawing while the old scene was being torn down, without wiping its last frame, and a scene with no auras or effects never drew over it. The layer is now wiped whenever drawing stops and on every scene change.
+
 ## 1.1.5
 
 * Auras: stricter checks that the token is still part of the canvas being shown (not torn down, detached or from another layer), and everything is cleared again when a new canvas starts.
